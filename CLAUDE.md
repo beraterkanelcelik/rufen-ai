@@ -13,7 +13,7 @@
 - **Telephony:** Telnyx SIP trunk, ONE number (`+4934156154530`), 5 channels.
 - **Backend:** Django 5 + Channels + Daphne (ASGI). Postgres 16 + Redis 7. **No Temporal, no Langfuse.** Parallel = asyncio tasks.
 - **Agent LLM:** Claude Haiku — `claude-haiku-4-5` (verified id).
-- **Planning LLM** (Phase-1 interview): Anthropic (`claude-haiku-4-5-20251001`) via `ANTHROPIC_API_KEY`.
+- **Planning LLM** (Phase-1 interview / UI orchestration agent): **local Qwen** — `Qwen3.5-35B-A3B` (MoE, 3B active; upgrade to `Qwen3.6-35B-A3B` if available) run via **MLX** on the host Mac (64 GB), exposing an OpenAI-compatible `/v1` endpoint. Higher quant (Q6/Q8) preferred on 64 GB for tool-call accuracy. Wired in Slice 6 via `PLANNER_BASE_URL` / `PLANNER_MODEL` / `PLANNER_API_KEY`. Anthropic (`claude-haiku-4-5-20251001` via `ANTHROPIC_API_KEY`) kept as fallback. NOTE: this is the orchestration LLM only — the **in-call** LLM stays `claude-haiku-4-5` (ElevenLabs).
 - **Frontend:** React 19 + Vite + Tailwind 4 + shadcn. Black + orange (Rufen palette).
 - **MCP:** FastMCP (stdio) + Claude Desktop.
 - **Auth + billing:** mocked (clean screens, no Stripe, no real metering).
