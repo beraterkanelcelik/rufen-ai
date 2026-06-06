@@ -11,6 +11,7 @@ with workflow.unsafe.imports_passed_through():
     from temporal_app.activities import (
         finalize_campaign_activity,
         place_call_activity,
+        send_confirmation_sms_activity,
         update_contact_status_activity,
     )
 
@@ -83,6 +84,18 @@ class ContactCallWorkflow:
                       res.get("result") or {}, None],
                 start_to_close_timeout=timedelta(seconds=30),
             )
+            # confirmation SMS on a successful (answered) call — best-effort
+            if status == "completed":
+                try:
+                    await workflow.execute_activity(
+                        send_confirmation_sms_activity,
+                        args=[contact_id, campaign_id],
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(maximum_attempts=1),
+                    )
+                except Exception:
+                    pass  # SMS failure must never affect the call outcome
+
             res["attempts"] = attempt
             res["status"] = status
             return res

@@ -18,6 +18,7 @@ from temporalio.worker import Worker
 from temporal_app.activities import (
     finalize_campaign_activity,
     place_call_activity,
+    send_confirmation_sms_activity,
     update_contact_status_activity,
 )
 from temporal_app.workflows import CampaignWorkflow, ContactCallWorkflow
@@ -50,6 +51,7 @@ async def main():
             place_call_activity,
             update_contact_status_activity,
             finalize_campaign_activity,
+            send_confirmation_sms_activity,
         ],
     )
     await worker.run()

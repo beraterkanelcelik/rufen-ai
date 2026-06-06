@@ -198,6 +198,27 @@ def _finalize_campaign(campaign_id):
     )
 
 
+@sync_to_async
+def _send_confirmation(contact_id, campaign_id):
+    from django.db import close_old_connections
+
+    from campaigns.models import Campaign, CampaignContact
+    from campaigns.sms import compose_confirmation, send_sms, sms_enabled
+
+    close_old_connections()
+    if not sms_enabled():
+        return False
+    contact = CampaignContact.objects.get(id=contact_id)
+    campaign = Campaign.objects.get(id=campaign_id)
+    return send_sms(contact.phone, compose_confirmation(contact, campaign))
+
+
+@activity.defn
+async def send_confirmation_sms_activity(contact_id: int, campaign_id: int) -> bool:
+    """Best-effort SMS confirmation after a successful (answered) call."""
+    return await _send_confirmation(contact_id, campaign_id)
+
+
 @activity.defn
 async def finalize_campaign_activity(campaign_id: int) -> None:
     """Mark the campaign completed and tell the monitor."""
