@@ -70,7 +70,17 @@ export function ContactRow({
           {c.attempts}
         </td>
         <td className="px-2 py-3">
-          <OutcomeBadge outcome={c.last_outcome} />
+          <div className="flex items-center gap-2">
+            <OutcomeBadge outcome={c.last_outcome} />
+            {c.sms_sent && (
+              <span
+                title="Confirmation SMS sent"
+                className="inline-flex items-center gap-1 rounded-full border border-[#10B981]/40 bg-[#10B981]/12 px-2 py-0.5 text-[11px] font-medium text-[#34d399]"
+              >
+                SMS ✓
+              </span>
+            )}
+          </div>
         </td>
         <td className="px-2 py-3 pr-4">
           <ResultFields result={c.result} schema={schema} variant="compact" />

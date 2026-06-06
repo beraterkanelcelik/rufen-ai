@@ -206,17 +206,29 @@ def _send_confirmation(contact_id, campaign_id):
     from campaigns.sms import compose_confirmation, send_sms, sms_enabled
 
     close_old_connections()
-    if not sms_enabled():
+    campaign = Campaign.objects.get(id=campaign_id)
+    if not sms_enabled() or not campaign.send_sms:  # per-campaign toggle + env gate
         return False
     contact = CampaignContact.objects.get(id=contact_id)
-    campaign = Campaign.objects.get(id=campaign_id)
-    return send_sms(contact.phone, compose_confirmation(contact, campaign))
+    ok = send_sms(contact.phone, compose_confirmation(contact, campaign))
+    if ok:
+        CampaignContact.objects.filter(id=contact_id).update(sms_sent=True)
+    return ok
 
 
 @activity.defn
 async def send_confirmation_sms_activity(contact_id: int, campaign_id: int) -> bool:
-    """Best-effort SMS confirmation after a successful (answered) call."""
-    return await _send_confirmation(contact_id, campaign_id)
+    """Best-effort SMS confirmation after a successful (answered) call. Honors the
+    campaign's send_sms toggle; on success persists sms_sent + notifies the monitor."""
+    sent = await _send_confirmation(contact_id, campaign_id)
+    if sent:
+        redis = Redis.from_url(os.environ["REDIS_URL"])
+        try:
+            await _publish(redis, campaign_id,
+                           {"type": "sms_sent", "contactId": str(contact_id)})
+        finally:
+            await redis.aclose()
+    return sent
 
 
 @activity.defn

@@ -70,6 +70,7 @@ export interface WizardDraft {
   retry_delay_minutes: number;
   max_attempts: number;
   retry_on: CallOutcome[];
+  send_sms: boolean;
 }
 
 export interface StepProps {

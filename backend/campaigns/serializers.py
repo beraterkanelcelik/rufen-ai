@@ -18,7 +18,8 @@ class ContactSerializer(serializers.ModelSerializer):
         model = CampaignContact
         fields = [
             "id", "campaign_id", "name", "phone", "context", "language",
-            "status", "attempts", "last_outcome", "result", "transcript", "created_at",
+            "status", "attempts", "last_outcome", "result", "transcript",
+            "sms_sent", "created_at",
         ]
 
     def get_id(self, obj):
@@ -61,6 +62,7 @@ class CampaignSerializer(serializers.ModelSerializer):
             "script_prompt", "first_message", "extraction_schema",
             "voice_id", "language",
             "concurrency", "retry_delay_minutes", "max_attempts", "retry_on",
+            "send_sms",
             "eleven_agent_id", "created_at", "started_at", "finished_at",
             "contact_count", "done_count",
         ]
@@ -86,7 +88,7 @@ class CampaignCreateSerializer(serializers.ModelSerializer):
             "script_prompt", "first_message", "extraction_schema",
             "voice_id", "language",
             "concurrency", "retry_delay_minutes", "max_attempts", "retry_on",
-            "contacts",
+            "send_sms", "contacts",
         ]
 
     def create(self, validated):

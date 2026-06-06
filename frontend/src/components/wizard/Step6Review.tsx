@@ -209,6 +209,13 @@ export function Step6Review({ draft }: StepProps) {
               </Pill>
             </span>
           </Row>
+          <Row label="SMS">
+            {draft.send_sms ? (
+              <Pill tone="green">Confirmation SMS on</Pill>
+            ) : (
+              <span className="text-muted">Off</span>
+            )}
+          </Row>
           <Row label="Retry on">
             {draft.retry_on.length ? (
               <span className="flex flex-wrap gap-1.5">

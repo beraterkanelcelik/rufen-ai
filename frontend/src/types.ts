@@ -46,6 +46,7 @@ export interface Campaign {
   retry_delay_minutes: number;
   max_attempts: number;
   retry_on: CallOutcome[];
+  send_sms?: boolean;
 
   eleven_agent_id: string | null;
 
@@ -71,6 +72,7 @@ export interface CampaignContact {
   last_outcome: CallOutcome | null;
   result: Record<string, unknown> | null; // extracted fields
   transcript?: TranscriptTurn[]; // latest attempt's saved transcript
+  sms_sent?: boolean; // confirmation SMS delivered
 
   created_at: string;
 }
@@ -144,10 +146,17 @@ export interface CampaignStatusEvent {
   status: CampaignStatus;
 }
 
+/** Confirmation SMS delivered for a contact. */
+export interface SmsSentEvent {
+  type: "sms_sent";
+  contactId: string;
+}
+
 export type LiveEvent =
   | ContactStatusEvent
   | TranscriptEvent
   | RetryCountdownEvent
   | ResultEvent
   | AggregateEvent
-  | CampaignStatusEvent;
+  | CampaignStatusEvent
+  | SmsSentEvent;

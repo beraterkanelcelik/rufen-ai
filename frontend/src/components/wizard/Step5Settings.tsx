@@ -87,6 +87,23 @@ export function Step5Settings({ draft, update }: StepProps) {
       </div>
 
       <div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-[8px] border border-border p-3 transition-colors hover:border-primary/30">
+          <input
+            type="checkbox"
+            checked={draft.send_sms}
+            onChange={(e) => update({ send_sms: e.target.checked })}
+            className="mt-0.5 h-4 w-4 accent-primary"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm text-foreground">Send confirmation SMS</span>
+            <span className="block text-xs text-muted">
+              Text the customer after an answered call (incl. appointment details).
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div>
         <span className="text-sm font-medium text-foreground">
           Retry on outcomes
         </span>

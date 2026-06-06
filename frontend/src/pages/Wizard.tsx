@@ -60,6 +60,7 @@ function makeInitialDraft(): WizardDraft {
     retry_delay_minutes: 15,
     max_attempts: 3,
     retry_on: ["no_answer", "busy", "failed"],
+    send_sms: true,
   };
   d.goal = composeGoal(d);
   d.reason = composeReason(d);
@@ -130,6 +131,7 @@ export default function Wizard() {
         retry_delay_minutes: draft.retry_delay_minutes,
         max_attempts: draft.max_attempts,
         retry_on: draft.retry_on,
+        send_sms: draft.send_sms,
         contacts: valid.map((c) => ({
           name: c.name,
           phone: c.phone,

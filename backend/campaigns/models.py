@@ -38,6 +38,7 @@ class Campaign(models.Model):
     # ElevenLabs allows 1 concurrent call PER AGENT, so a campaign needs a pool
     # of `concurrency` agents to dial in parallel. eleven_agent_id stays = pool[0].
     eleven_agent_ids = models.JSONField(default=list, blank=True)
+    send_sms = models.BooleanField(default=False)  # confirmation SMS after answered calls
 
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
@@ -75,6 +76,7 @@ class CampaignContact(models.Model):
     attempts = models.PositiveIntegerField(default=0)
     last_outcome = models.CharField(max_length=32, blank=True)
     result = models.JSONField(default=dict, blank=True)  # extracted fields
+    sms_sent = models.BooleanField(default=False)  # confirmation SMS delivered
 
     created_at = models.DateTimeField(auto_now_add=True)
 

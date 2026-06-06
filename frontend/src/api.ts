@@ -38,6 +38,7 @@ export interface CreateCampaignBody {
   retry_delay_minutes: number;
   max_attempts: number;
   retry_on: Campaign["retry_on"];
+  send_sms: boolean;
   contacts: Array<{ name: string; phone: string; context: string; language: string }>;
 }
 

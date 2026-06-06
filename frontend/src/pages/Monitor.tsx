@@ -168,6 +168,14 @@ export default function Monitor() {
           );
           break;
 
+        case "sms_sent":
+          setContacts((prev) =>
+            prev.map((c) =>
+              c.id === e.contactId ? { ...c, sms_sent: true } : c
+            )
+          );
+          break;
+
         case "aggregate":
           setAgg(e);
           break;
