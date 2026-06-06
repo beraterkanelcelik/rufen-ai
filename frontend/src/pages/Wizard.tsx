@@ -11,6 +11,7 @@ import { Step4Voice } from "../components/wizard/Step4Voice";
 import { Step5Settings } from "../components/wizard/Step5Settings";
 import { Step6Review } from "../components/wizard/Step6Review";
 import { composeGoal, composeReason } from "../components/wizard/dealership";
+import { PlayIcon } from "../components/ui/icons";
 import type { WizardDraft } from "../components/wizard/types";
 
 const STEP_LABELS = [
@@ -196,7 +197,13 @@ export default function Wizard() {
                 <span className="text-xs text-red-400">{launchError}</span>
               )}
               <Button size="lg" onClick={launch} disabled={submitting}>
-                {submitting ? "Launching…" : "▶ Launch campaign"}
+                {submitting ? (
+                  "Launching…"
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <PlayIcon className="h-4 w-4" /> Launch campaign
+                  </span>
+                )}
               </Button>
             </div>
           ) : (

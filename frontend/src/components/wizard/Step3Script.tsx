@@ -2,6 +2,7 @@ import { useState } from "react";
 import { generateScript } from "../../api";
 import type { ExtractionField } from "../../types";
 import { Button } from "../ui/Button";
+import { RefreshIcon, SparklesIcon } from "../ui/icons";
 import { Field, Select, TextArea, TextInput } from "./fields";
 import type { StepProps } from "./types";
 
@@ -70,15 +71,21 @@ export function Step3Script({ draft, update }: StepProps) {
         </div>
         {draft.generated && (
           <Button variant="outline" size="sm" onClick={generate} disabled={busy}>
-            {busy ? "Regenerating…" : "↻ Regenerate"}
+            {busy ? (
+              "Regenerating…"
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <RefreshIcon className="h-3.5 w-3.5" /> Regenerate
+              </span>
+            )}
           </Button>
         )}
       </div>
 
       {!draft.generated ? (
         <div className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-[#212121] px-6 py-14 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-2xl">
-            ✦
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]">
+            <SparklesIcon className="h-5 w-5" />
           </div>
           <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
             Generate the call script with AI
@@ -89,7 +96,13 @@ export function Step3Script({ draft, update }: StepProps) {
             extraction schema.
           </p>
           <Button className="mt-5" onClick={generate} disabled={busy}>
-            {busy ? "Generating…" : "✦ Generate with AI"}
+            {busy ? (
+              "Generating…"
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <SparklesIcon className="h-4 w-4" /> Generate with AI
+              </span>
+            )}
           </Button>
           {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
         </div>

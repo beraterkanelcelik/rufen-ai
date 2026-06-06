@@ -1,4 +1,5 @@
 import { composeGoal, composeReason, BRANDS, CAMPAIGN_TYPES, PRIMARY_GOALS, URGENCIES } from "./dealership";
+import { CAMPAIGN_TYPE_ICONS, SparklesIcon } from "../ui/icons";
 import { Field, Select, TextArea, TextInput } from "./fields";
 import type { StepProps, WizardDraft } from "./types";
 
@@ -24,6 +25,7 @@ export function Step2Goal({ draft, update }: StepProps) {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {CAMPAIGN_TYPES.map((t) => {
             const selected = draft.campaignType === t.id;
+            const Icon = CAMPAIGN_TYPE_ICONS[t.id] ?? SparklesIcon;
             return (
               <button
                 key={t.id}
@@ -35,8 +37,8 @@ export function Step2Goal({ draft, update }: StepProps) {
                     : "border-[#212121] hover:border-[#F97316]/40 hover:bg-white/[0.02]"
                 }`}
               >
-                <span className="text-xl">{t.icon}</span>
-                <span className="mt-1 text-xs font-medium text-white">{t.title}</span>
+                <Icon className={`h-5 w-5 ${selected ? "text-[#F97316]" : "text-[#8a8a8a]"}`} />
+                <span className="mt-1.5 text-xs font-medium text-white">{t.title}</span>
                 <span className="text-[10px] text-[#8a8a8a]">{t.sub}</span>
               </button>
             );

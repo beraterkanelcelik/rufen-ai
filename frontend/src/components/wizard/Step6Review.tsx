@@ -3,6 +3,7 @@ import { getTestCall, testCall } from "../../api";
 import { Card, CardBody } from "../ui/Card";
 import { Pill } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { PhoneIcon } from "../ui/icons";
 import { TextInput } from "./fields";
 import type { StepProps, WizardDraft } from "./types";
 
@@ -98,7 +99,13 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
             className="max-w-xs"
           />
           <Button onClick={call} disabled={!valid || busy || !draft.generated}>
-            {busy ? "Calling…" : "📞 Call my phone"}
+            {busy ? (
+              "Calling…"
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <PhoneIcon className="h-4 w-4" /> Call my phone
+              </span>
+            )}
           </Button>
         </div>
         {!draft.generated && (

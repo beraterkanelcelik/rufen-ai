@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchVoices, type Voice } from "../../api";
 import type { Language } from "../../types";
+import { PlayIcon } from "../ui/icons";
 import { Field, Select } from "./fields";
 import type { StepProps } from "./types";
 
@@ -51,7 +52,7 @@ export function Step4Voice({ draft, update }: StepProps) {
                 title={v.preview_url ? "Play preview" : "No preview available"}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]"
               >
-                ▶
+                <PlayIcon className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">

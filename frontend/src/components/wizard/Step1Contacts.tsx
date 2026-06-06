@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { parseContacts } from "../../api";
 import { Pill } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { FileIcon, UploadIcon } from "../ui/icons";
 import type { StepProps } from "./types";
 
 export function Step1Contacts({ draft, update }: StepProps) {
@@ -78,8 +79,8 @@ export function Step1Contacts({ draft, update }: StepProps) {
                 : "border-[#212121] hover:border-[#F97316]/50 hover:bg-white/[0.02]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-2xl">
-              ⬆
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]">
+              <UploadIcon className="h-5 w-5" />
             </div>
             <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
               {busy ? "Parsing…" : (
@@ -99,7 +100,7 @@ export function Step1Contacts({ draft, update }: StepProps) {
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-[#212121] bg-[#0a0a0a] px-4 py-3">
             <div className="flex items-center gap-3">
-              <span className="text-lg">📄</span>
+              <FileIcon className="h-5 w-5 text-[#8a8a8a]" />
               <div>
                 <p className="text-sm font-medium text-white">
                   {draft.fileName}

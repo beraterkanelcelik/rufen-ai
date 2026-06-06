@@ -3,12 +3,12 @@
 // that our backend AI generator (/api/generate) uses to draft the call script.
 import type { CampaignType, Urgency, WizardDraft } from "./types";
 
-export const CAMPAIGN_TYPES: { id: CampaignType; title: string; icon: string; sub: string }[] = [
-  { id: "recall", title: "Recall", icon: "🔧", sub: "Safety action" },
-  { id: "warranty", title: "Warranty", icon: "🛡️", sub: "Goodwill swap" },
-  { id: "service", title: "Service", icon: "📅", sub: "Standard check" },
-  { id: "reactivation", title: "Reactivation", icon: "🔄", sub: "Inactive owners" },
-  { id: "custom", title: "Custom", icon: "✨", sub: "Own content" },
+export const CAMPAIGN_TYPES: { id: CampaignType; title: string; sub: string }[] = [
+  { id: "recall", title: "Recall", sub: "Safety action" },
+  { id: "warranty", title: "Warranty", sub: "Goodwill swap" },
+  { id: "service", title: "Service", sub: "Standard check" },
+  { id: "reactivation", title: "Reactivation", sub: "Inactive owners" },
+  { id: "custom", title: "Custom", sub: "Own content" },
 ];
 
 export const BRANDS = [
