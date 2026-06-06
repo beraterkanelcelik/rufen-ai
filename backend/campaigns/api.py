@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from temporalio.client import Client
 
-from .eleven import create_agent, list_voices
+from .eleven import create_agent, get_conversation, list_voices, start_call
 from .generator import generate_script
 from .importer import parse_contacts
 from .models import Campaign
@@ -175,6 +175,50 @@ def voices(request):
 
 
 @api_view(["POST"])
+def test_call(request):
+    """Place a single REAL test call using the campaign's draft script + voice, so
+    the user can hear exactly what customers will hear before launching."""
+    d = request.data
+    phone = (d.get("phone") or "").strip()
+    if not phone:
+        return Response({"detail": "phone is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if not os.environ.get("ELEVEN_AGENT_PHONE_NUMBER_ID"):
+        return Response({"detail": "telephony not configured (ELEVEN_AGENT_PHONE_NUMBER_ID)"},
+                        status=status.HTTP_400_BAD_REQUEST)
+    try:
+        agent_id = async_to_sync(create_agent)(
+            name=f"Rufen × Cara8 — test {phone}"[:100],
+            system_prompt=d.get("script_prompt") or "You are a friendly AI assistant making a quick test call. Confirm the person can hear you, then thank them and end.",
+            first_message=d.get("first_message") or "Hi {{name}}, this is a quick test call — can you hear me okay?",
+            voice_id=d.get("voice_id") or "",
+            language=d.get("language") or "en",
+            data_collection=d.get("extraction_schema") or [],
+        )
+        dyn = {"name": d.get("name") or "there",
+               "context": d.get("context") or "a quick test call",
+               "phone": phone}
+        res = async_to_sync(start_call)(agent_id, phone, dyn)
+        return Response({"conversation_id": res.get("conversation_id"), "agent_id": agent_id})
+    except Exception as exc:
+        return Response({"detail": f"test call failed: {exc}"}, status=status.HTTP_502_BAD_GATEWAY)
+
+
+@api_view(["GET"])
+def test_call_status(request, cid):
+    """Poll a test call's live status + transcript (frontend polls this ~1/s)."""
+    try:
+        data = async_to_sync(get_conversation)(cid)
+    except Exception as exc:
+        return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+    transcript = [
+        {"role": "callee" if t.get("role") == "user" else "agent",
+         "text": t.get("message") or ""}
+        for t in (data.get("transcript") or [])
+    ]
+    return Response({"status": data.get("status"), "transcript": transcript})
+
+
+@api_view(["POST"])
 def contacts_parse(request):
     """Parse an uploaded .csv/.xlsx into valid/invalid contact rows (no DB write)."""
     f = request.FILES.get("file")
@@ -205,4 +249,6 @@ urlpatterns = [
     path("generate", generate),
     path("voices", voices),
     path("contacts/parse", contacts_parse),
+    path("test-call", test_call),
+    path("test-call/<str:cid>", test_call_status),
 ]

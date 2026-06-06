@@ -60,6 +60,32 @@ export const generateScript = (goal: string, reason: string, fields: string[]) =
     body: JSON.stringify({ goal, reason, fields }),
   });
 
+export interface TestCallResult {
+  conversation_id: string;
+  agent_id: string;
+}
+
+export interface TestCallBody {
+  phone: string;
+  script_prompt: string;
+  first_message: string;
+  voice_id: string;
+  language: string;
+  extraction_schema: Campaign["extraction_schema"];
+  name?: string;
+  context?: string;
+}
+
+export const testCall = (body: TestCallBody) =>
+  http<TestCallResult>("/test-call", { method: "POST", body: JSON.stringify(body) });
+
+export interface TestCallStatus {
+  status: string;
+  transcript: { role: "agent" | "callee"; text: string }[];
+}
+
+export const getTestCall = (cid: string) => http<TestCallStatus>(`/test-call/${cid}`);
+
 export interface Voice {
   id: string;
   name: string;

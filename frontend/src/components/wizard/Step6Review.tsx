@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { getTestCall, testCall } from "../../api";
 import { Card, CardBody } from "../ui/Card";
 import { Pill } from "../ui/Badge";
-import type { StepProps } from "./types";
+import { Button } from "../ui/Button";
+import { TextInput } from "./fields";
+import type { StepProps, WizardDraft } from "./types";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -9,6 +12,129 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <span className="w-32 shrink-0 text-[#8a8a8a]">{label}</span>
       <span className="min-w-0 flex-1 text-[#e0e0e0]">{children}</span>
     </div>
+  );
+}
+
+type Turn = { role: "agent" | "callee"; text: string };
+
+function TestCallCard({ draft }: { draft: WizardDraft }) {
+  const [phone, setPhone] = useState("");
+  const [convId, setConvId] = useState<string | null>(null);
+  const [callStatus, setCallStatus] = useState<string>("");
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll the live transcript while a test call is in flight.
+  useEffect(() => {
+    if (!convId) return;
+    timer.current = setInterval(async () => {
+      try {
+        const s = await getTestCall(convId);
+        setCallStatus(s.status);
+        setTurns(s.transcript);
+        if (s.status === "done" || s.status === "failed") {
+          if (timer.current) clearInterval(timer.current);
+          setBusy(false);
+        }
+      } catch {
+        /* transient — keep polling */
+      }
+    }, 1500);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [convId]);
+
+  async function call() {
+    setError(null);
+    setTurns([]);
+    setConvId(null);
+    setCallStatus("");
+    setBusy(true);
+    try {
+      const ctx = draft.affectedModels
+        ? `${draft.brand} ${draft.affectedModels} — ${draft.actionId}`
+        : "a quick test call";
+      const res = await testCall({
+        phone: phone.trim(),
+        script_prompt: draft.script_prompt,
+        first_message: draft.first_message,
+        voice_id: draft.voice_id,
+        language: draft.language,
+        extraction_schema: draft.extraction_schema,
+        name: "there",
+        context: ctx,
+      });
+      setConvId(res.conversation_id);
+      setCallStatus("initiated");
+    } catch (e) {
+      setError(String(e));
+      setBusy(false);
+    }
+  }
+
+  const valid = /^\+\d{6,15}$/.test(phone.trim());
+
+  return (
+    <Card>
+      <CardBody className="space-y-3 pt-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Test call (optional)</h3>
+          <p className="mt-1 text-xs text-[#8a8a8a]">
+            Ring your own phone with this exact script &amp; voice before launching
+            the campaign.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <TextInput
+            value={phone}
+            placeholder="+49…"
+            onChange={(e) => setPhone(e.target.value)}
+            className="max-w-xs"
+          />
+          <Button onClick={call} disabled={!valid || busy || !draft.generated}>
+            {busy ? "Calling…" : "📞 Call my phone"}
+          </Button>
+        </div>
+        {!draft.generated && (
+          <p className="text-xs text-[#8a8a8a]">Generate the script first (step 3).</p>
+        )}
+        {error && <p className="text-xs text-red-400">{error}</p>}
+        {(callStatus || turns.length > 0) && (
+          <div className="rounded-[8px] border border-[#212121] bg-[#0a0a0a] p-3">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#8a8a8a]">
+              {callStatus === "done"
+                ? "Call finished"
+                : callStatus === "failed"
+                  ? "Call failed"
+                  : `Live · ${callStatus || "connecting"}…`}
+            </div>
+            <div className="max-h-56 space-y-1.5 overflow-y-auto">
+              {turns.length === 0 ? (
+                <p className="text-xs text-[#8a8a8a]">
+                  Pick up your phone — the transcript appears here.
+                </p>
+              ) : (
+                turns.map((t, i) => (
+                  <div key={i} className="text-xs">
+                    <span
+                      className={
+                        t.role === "agent" ? "text-[#F97316]" : "text-[#8a8a8a]"
+                      }
+                    >
+                      {t.role === "agent" ? "Agent" : "Callee"}:
+                    </span>{" "}
+                    <span className="text-[#e0e0e0]">{t.text}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 }
 
@@ -98,6 +224,8 @@ export function Step6Review({ draft }: StepProps) {
           </Row>
         </CardBody>
       </Card>
+
+      <TestCallCard draft={draft} />
 
       <p className="text-center text-xs text-[#8a8a8a]">
         On launch, the campaign starts immediately and you'll be taken to the
