@@ -9,7 +9,7 @@ from django.urls import include, path
 
 
 def health(_request):
-    return JsonResponse({"status": "ok", "service": "rufen-campaign"})
+    return JsonResponse({"status": "ok", "service": "rufen-x-cara8"})
 
 
 urlpatterns = [

@@ -1,4 +1,4 @@
-# Rufen Campaign — Design Doc
+# Rufen × Cara8 — Design Doc
 
 > Outbound **calling-campaign** platform. Upload an Excel of customers + context → wizard builds a campaign → AI drafts the call script → fire calls with configurable concurrency → monitor live → retry no-answers on a delay → structured per-call outcomes + export.
 
@@ -9,7 +9,7 @@
 ## 1. Concept & buyer
 **Buyer:** an operations/recall coordinator at an automotive OEM or large dealer group who must call **many customers individually** for one specific reason — e.g. *"BMW needs 50 owners to bring their car in for a recall."* Today that's a person dialing down a spreadsheet, leaving voicemails, and hand-logging who they reached and what was said.
 
-**Rufen Campaign** turns that into: upload the list → describe the goal once → an AI call team works the whole list in parallel, retries the no-answers, and hands back a structured result per customer (reached? agreed to book? preferred date? callback?).
+**Rufen × Cara8** turns that into: upload the list → describe the goal once → an AI call team works the whole list in parallel, retries the no-answers, and hands back a structured result per customer (reached? agreed to book? preferred date? callback?).
 
 **Why it scores (pitch):** specific buyer, painful manual workflow with obvious ROI, AI used as the *labor* (not a chatbot), and a demo that visibly does in minutes what takes a person all day. (Full pitch in `docs/02-PITCH.md`.)
 

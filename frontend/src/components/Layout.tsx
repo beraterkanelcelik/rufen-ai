@@ -52,7 +52,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="text-lg font-semibold tracking-tight text-white">
             Rufen
           </span>
-          <span className="text-lg font-light text-[#8a8a8a]">Campaign</span>
+          <span className="text-lg font-light text-[#8a8a8a]">× Cara8</span>
         </Link>
 
         <nav className="flex flex-col gap-1">
@@ -75,7 +75,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#212121] bg-[#0d0d0d] px-6">
           <Link to="/" className="flex items-center gap-2 md:hidden">
             <img src="/brand/icon-dark.svg" alt="" className="h-6 w-auto" />
-            <span className="text-base font-semibold text-white">Rufen</span>
+            <span className="text-base font-semibold text-white">Rufen × Cara8</span>
           </Link>
           <div className="hidden items-center gap-2 md:flex">
             <span className="rufen-dot h-2 w-2 rounded-full bg-[#F97316]" />

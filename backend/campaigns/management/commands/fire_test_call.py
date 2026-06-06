@@ -18,11 +18,11 @@ from campaigns.eleven import create_agent, get_conversation, start_call
 
 DEMO_PROMPT = (
     "You are a friendly AI assistant making a quick test call on behalf of the "
-    "Rufen team. You are speaking with {{name}}. Their record: {{context}}. Briefly "
+    "Rufen Cara8 team. You are speaking with {{name}}. Their record: {{context}}. Briefly "
     "introduce yourself as an AI assistant, confirm they can hear you clearly, "
     "ask if now is a good time, thank them, and end the call. Keep it under 30 seconds."
 )
-DEMO_FIRST = "Hi {{name}}, this is a Rufen test assistant — can you hear me okay?"
+DEMO_FIRST = "Hi {{name}}, this is a Rufen Cara8 test assistant — can you hear me okay?"
 
 
 class Command(BaseCommand):
@@ -49,7 +49,7 @@ class Command(BaseCommand):
         if not agent_id:
             self.stdout.write("· creating throwaway test agent…")
             agent_id = await create_agent(
-                name="Rufen — test call",
+                name="Rufen × Cara8 — test call",
                 system_prompt=DEMO_PROMPT,
                 first_message=DEMO_FIRST,
                 voice_id=opts["voice_id"] or "CwhRBWXzGAHq8TQ4Fs17",  # Roger

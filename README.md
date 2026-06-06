@@ -1,4 +1,4 @@
-# Rufen Campaign — Outbound AI Calling Campaigns
+# Rufen × Cara8 — Outbound AI Calling Campaigns
 
 **Event:** AI BEAVERS × Mollie Founder Hackathon · House of AI, Hamburg · Sat **June 6, 2026** · submit by **19:00**. 2-person team (backend + UX in parallel).
 

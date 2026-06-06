@@ -81,7 +81,7 @@ def _ensure_agents(campaign):
     agent_ids = []
     for i in range(pool_size):
         agent_ids.append(async_to_sync(create_agent)(
-            name=f"Rufen #{campaign.id}/{i + 1} — {campaign.name}"[:100],
+            name=f"Rufen × Cara8 #{campaign.id}/{i + 1} — {campaign.name}"[:100],
             system_prompt=campaign.script_prompt,
             first_message=campaign.first_message,
             voice_id=campaign.voice_id,

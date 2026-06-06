@@ -1,4 +1,4 @@
-# Rufen Campaign — Implementation Plan
+# Rufen × Cara8 — Implementation Plan
 
 > **For agentic workers:** implement task-by-task; checkbox (`- [ ]`) steps. **Read `CLAUDE.md` + `docs/00-DESIGN.md` first.** Build fresh — never copy from `~/Projects/Rufen`.
 

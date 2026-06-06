@@ -1,4 +1,4 @@
-# Rufen Campaign — Outbound AI Calling Campaigns (Hackathon Build)
+# Rufen × Cara8 — Outbound AI Calling Campaigns (Hackathon Build)
 
 **AI BEAVERS × Mollie Founder Hackathon · Hamburg · Sat June 6 2026.** 2-person team (backend = you, UX = cofounder, in parallel). Submit by 19:00, 3-min live pitch.
 
