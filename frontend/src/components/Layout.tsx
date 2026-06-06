@@ -48,7 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-[#212121] bg-[#0d0d0d] p-4 md:flex">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2 pt-1">
-          <span className="rufen-dot h-2.5 w-2.5 rounded-full bg-[#F97316]" />
+          <img src="/brand/icon-dark.svg" alt="" className="h-7 w-auto" />
           <span className="text-lg font-semibold tracking-tight text-white">
             Rufen
           </span>
@@ -74,7 +74,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {/* Topbar */}
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#212121] bg-[#0d0d0d] px-6">
           <Link to="/" className="flex items-center gap-2 md:hidden">
-            <span className="rufen-dot h-2.5 w-2.5 rounded-full bg-[#F97316]" />
+            <img src="/brand/icon-dark.svg" alt="" className="h-6 w-auto" />
             <span className="text-base font-semibold text-white">Rufen</span>
           </Link>
           <div className="hidden items-center gap-2 md:flex">
