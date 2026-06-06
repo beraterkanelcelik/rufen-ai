@@ -20,7 +20,12 @@ SYSTEM = (
     "number as {{phone}}. NEVER ask the customer to read out or provide their phone "
     "number. If a contact number must be confirmed (e.g. for the appointment "
     "confirmation), ask whether to use this number, {{phone}}, or a different one. "
-    "Keep calls under 90 seconds; be polite; clearly identify as an AI assistant. "
+    "CONVERSATION DESIGN: the system_prompt must instruct the agent to gather and "
+    "CONFIRM every field in extraction_schema before ending the call — leave none "
+    "unverified. Ask ONLY ONE question at a time and wait for the answer before "
+    "asking the next; never bundle multiple questions into a single turn. Briefly "
+    "acknowledge each answer, then move to the next field. "
+    "Be polite; clearly identify as an AI assistant. "
     "Return ONLY the JSON object, no prose."
 )
 
