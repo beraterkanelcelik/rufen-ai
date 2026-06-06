@@ -1,12 +1,8 @@
 """Temporal worker — Django-bootstrapped.
 
-Slice 1: a minimal worker that bootstraps Django, connects to Temporal, and
-runs on the ``campaigns`` task queue with a single ``ping`` activity. This makes
-the ``temporal-worker`` service boot cleanly and proves connectivity to the
-Temporal dev server today.
-
-Slice 2+ registers the real activities (place_call_activity) and workflows
-(ContactCallWorkflow, CampaignWorkflow) here.
+Bootstraps Django (so activities can use the ORM), connects to the Temporal dev
+server, and serves the ``campaigns`` task queue with the ContactCallWorkflow and
+its activities. CampaignWorkflow (fan-out over contacts) is added in Slice 3.
 """
 import asyncio
 import os
@@ -16,17 +12,13 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()  # must run before importing anything that touches models
 
-from temporalio import activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from temporal_app.activities import place_call_activity, update_contact_status_activity
+from temporal_app.workflows import ContactCallWorkflow
+
 TASK_QUEUE = "campaigns"
-
-
-@activity.defn
-async def ping() -> str:
-    """Placeholder activity so the worker has something to register (Slice 1)."""
-    return "pong"
 
 
 async def _connect_with_retry() -> Client:
@@ -49,8 +41,8 @@ async def main():
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[],
-        activities=[ping],
+        workflows=[ContactCallWorkflow],
+        activities=[place_call_activity, update_contact_status_activity],
     )
     await worker.run()
 
