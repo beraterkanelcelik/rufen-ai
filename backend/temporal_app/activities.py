@@ -199,8 +199,13 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
             seen = len(transcript)
             if status in ("done", "failed"):
                 break
-            # never engaged → treat as no-answer/declined and stop ringing-wait
-            if elapsed >= RING_NO_ANSWER_SECONDS and not transcript:
+            # Only declare no-answer while the call is still RINGING (status
+            # "initiated"). Once it's "in-progress" the callee picked up — keep
+            # polling even with 0 turns, because ElevenLabs sometimes withholds
+            # the transcript until the call is done. (Cutting an answered-but-
+            # silent-transcript call here was killing real conversations.)
+            if (elapsed >= RING_NO_ANSWER_SECONDS and not transcript
+                    and status in (None, "", "initiated")):
                 break
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
             elapsed += POLL_INTERVAL_SECONDS
