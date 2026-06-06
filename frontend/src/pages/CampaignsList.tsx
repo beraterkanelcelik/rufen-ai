@@ -4,8 +4,13 @@ import { deleteCampaign, fetchCampaigns } from "../api";
 import { Card, CardBody, CardHeader } from "../components/ui/Card";
 import { CampaignStatusBadge, Pill } from "../components/ui/Badge";
 import { ProgressBar } from "../components/ui/ProgressBar";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { TrashIcon } from "../components/ui/icons";
 import type { Campaign } from "../types";
+
+type Pending =
+  | { kind: "one"; campaign: Campaign }
+  | { kind: "all"; count: number };
 
 function completionFor(campaign: Campaign): { done: number; total: number } {
   const total = campaign.contact_count;
@@ -17,6 +22,8 @@ export default function CampaignsList() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCampaigns()
@@ -24,37 +31,47 @@ export default function CampaignsList() {
       .catch((e) => setError(String(e)));
   }, []);
 
-  async function handleDelete(e: React.MouseEvent, c: Campaign) {
+  function askDelete(e: React.MouseEvent, c: Campaign) {
     e.preventDefault(); // don't navigate into the card
     e.stopPropagation();
-    if (!window.confirm(`Delete campaign "${c.name}"? This removes its contacts and results.`)) {
-      return;
-    }
-    setDeleting(c.id);
-    try {
-      await deleteCampaign(c.id);
-      setCampaigns((prev) => (prev ? prev.filter((x) => x.id !== c.id) : prev));
-    } catch (err) {
-      window.alert(`Could not delete: ${err}`);
-    } finally {
-      setDeleting(null);
-    }
+    setDialogError(null);
+    setPending({ kind: "one", campaign: c });
   }
 
-  async function handleDeleteAll() {
+  function askDeleteAll() {
     if (!campaigns || campaigns.length === 0) return;
-    if (!window.confirm(`Delete all ${campaigns.length} campaigns? This can't be undone.`)) {
-      return;
-    }
-    setDeleting("__all__");
-    try {
-      await Promise.all(campaigns.map((c) => deleteCampaign(c.id)));
-      setCampaigns([]);
-    } catch (err) {
-      window.alert(`Could not delete all: ${err}`);
-      fetchCampaigns().then(setCampaigns).catch(() => {});
-    } finally {
-      setDeleting(null);
+    setDialogError(null);
+    setPending({ kind: "all", count: campaigns.length });
+  }
+
+  async function confirmDelete() {
+    if (!pending) return;
+    setDialogError(null);
+    if (pending.kind === "one") {
+      const c = pending.campaign;
+      setDeleting(c.id);
+      try {
+        await deleteCampaign(c.id);
+        setCampaigns((prev) => (prev ? prev.filter((x) => x.id !== c.id) : prev));
+        setPending(null);
+      } catch (err) {
+        setDialogError(`Could not delete: ${err}`);
+      } finally {
+        setDeleting(null);
+      }
+    } else {
+      if (!campaigns) return;
+      setDeleting("__all__");
+      try {
+        await Promise.all(campaigns.map((c) => deleteCampaign(c.id)));
+        setCampaigns([]);
+        setPending(null);
+      } catch (err) {
+        setDialogError(`Could not delete all: ${err}`);
+        fetchCampaigns().then(setCampaigns).catch(() => {});
+      } finally {
+        setDeleting(null);
+      }
     }
   }
 
@@ -88,7 +105,7 @@ export default function CampaignsList() {
         {campaigns.length > 0 && (
           <button
             type="button"
-            onClick={handleDeleteAll}
+            onClick={askDeleteAll}
             disabled={deleting === "__all__"}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm text-muted transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
           >
@@ -127,7 +144,7 @@ export default function CampaignsList() {
                           aria-label="Delete campaign"
                           title="Delete campaign"
                           disabled={deleting === c.id}
-                          onClick={(e) => handleDelete(e, c)}
+                          onClick={(e) => askDelete(e, c)}
                           className="flex h-7 w-7 items-center justify-center rounded-full text-subtle transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
                         >
                           <TrashIcon className="h-3.5 w-3.5" />
@@ -168,6 +185,37 @@ export default function CampaignsList() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pending !== null}
+        tone="danger"
+        title={pending?.kind === "all" ? "Delete all campaigns?" : "Delete campaign?"}
+        message={
+          pending?.kind === "all" ? (
+            <>
+              This permanently deletes all{" "}
+              <span className="text-foreground">{pending.count}</span> campaigns,
+              including their contacts and results. This can't be undone.
+            </>
+          ) : (
+            <>
+              This permanently deletes{" "}
+              <span className="text-foreground">
+                “{pending?.kind === "one" ? pending.campaign.name : ""}”
+              </span>{" "}
+              along with its contacts and results. This can't be undone.
+            </>
+          )
+        }
+        confirmLabel={pending?.kind === "all" ? "Delete all" : "Delete"}
+        loading={deleting !== null}
+        error={dialogError}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setPending(null);
+          setDialogError(null);
+        }}
+      />
     </div>
   );
 }

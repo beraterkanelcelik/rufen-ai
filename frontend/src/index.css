@@ -70,3 +70,31 @@ body {
 .rufen-dot {
   animation: rufen-pulse 1.8s ease-in-out infinite;
 }
+
+@keyframes rufen-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rufen-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.rufen-overlay {
+  animation: rufen-overlay-in 0.15s ease-out;
+}
+
+.rufen-modal {
+  animation: rufen-modal-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
