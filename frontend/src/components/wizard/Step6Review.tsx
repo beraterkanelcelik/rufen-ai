@@ -22,6 +22,7 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
   const [convId, setConvId] = useState<string | null>(null);
   const [callStatus, setCallStatus] = useState<string>("");
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [reason, setReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -34,6 +35,7 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
         const s = await getTestCall(convId);
         setCallStatus(s.status);
         setTurns(s.transcript);
+        setReason(s.reason ?? null);
         if (s.status === "done" || s.status === "failed") {
           if (timer.current) clearInterval(timer.current);
           setBusy(false);
@@ -52,6 +54,7 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
     setTurns([]);
     setConvId(null);
     setCallStatus("");
+    setReason(null);
     setBusy(true);
     try {
       const ctx = draft.affectedModels
@@ -111,6 +114,9 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
                   ? "Call failed"
                   : `Live · ${callStatus || "connecting"}…`}
             </div>
+            {callStatus === "failed" && reason && (
+              <p className="mb-2 text-xs text-red-400">{reason}</p>
+            )}
             <div className="max-h-56 space-y-1.5 overflow-y-auto">
               {turns.length === 0 ? (
                 <p className="text-xs text-[#8a8a8a]">

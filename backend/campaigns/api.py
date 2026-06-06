@@ -7,6 +7,7 @@ status so the monitor can stream simulated runs.
 """
 import io
 import os
+import re
 
 from asgiref.sync import async_to_sync
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -178,10 +179,15 @@ def voices(request):
 def test_call(request):
     """Place a single REAL test call using the campaign's draft script + voice, so
     the user can hear exactly what customers will hear before launching."""
+    # NOTE: auth is mocked for this hackathon (locked decision) and the backend
+    # runs locally, not publicly. For any real/public deployment this endpoint
+    # MUST require an authenticated principal + a destination allowlist + rate
+    # limiting (it places real outbound calls → toll-fraud/vishing vector).
     d = request.data
     phone = (d.get("phone") or "").strip()
-    if not phone:
-        return Response({"detail": "phone is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if not re.fullmatch(r"\+\d{6,15}", phone):
+        return Response({"detail": "phone must be E.164, e.g. +4915123456789"},
+                        status=status.HTTP_400_BAD_REQUEST)
     if not os.environ.get("ELEVEN_AGENT_PHONE_NUMBER_ID"):
         return Response({"detail": "telephony not configured (ELEVEN_AGENT_PHONE_NUMBER_ID)"},
                         status=status.HTTP_400_BAD_REQUEST)
@@ -206,16 +212,29 @@ def test_call(request):
 @api_view(["GET"])
 def test_call_status(request, cid):
     """Poll a test call's live status + transcript (frontend polls this ~1/s)."""
+    if not re.fullmatch(r"conv_[A-Za-z0-9]{6,64}", cid):
+        return Response({"detail": "invalid conversation id"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         data = async_to_sync(get_conversation)(cid)
-    except Exception as exc:
-        return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+    except Exception:
+        # don't echo upstream error text (may leak URL/headers)
+        return Response({"detail": "could not fetch conversation"},
+                        status=status.HTTP_502_BAD_GATEWAY)
     transcript = [
         {"role": "callee" if t.get("role") == "user" else "agent",
          "text": t.get("message") or ""}
         for t in (data.get("transcript") or [])
     ]
-    return Response({"status": data.get("status"), "transcript": transcript})
+    # surface a human-readable failure reason (e.g. SIP 480 = unreachable)
+    err = (data.get("metadata") or {}).get("error") or {}
+    reason = None
+    if data.get("status") == "failed":
+        code = err.get("code")
+        if code == 480:
+            reason = "Number temporarily unavailable (SIP 480) — phone busy/off/no coverage. Try again."
+        else:
+            reason = err.get("reason") or "Call failed before connecting."
+    return Response({"status": data.get("status"), "transcript": transcript, "reason": reason})
 
 
 @api_view(["POST"])

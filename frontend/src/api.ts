@@ -82,6 +82,7 @@ export const testCall = (body: TestCallBody) =>
 export interface TestCallStatus {
   status: string;
   transcript: { role: "agent" | "callee"; text: string }[];
+  reason?: string | null;
 }
 
 export const getTestCall = (cid: string) => http<TestCallStatus>(`/test-call/${cid}`);
