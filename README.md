@@ -10,10 +10,10 @@ Product name: **Rufen AI** (reusing your existing brand — judges don't know it
 
 | File | What it's for | When you read it |
 |---|---|---|
-| [`00-DESIGN.md`](./00-DESIGN.md) | Architecture, stack, data model, API, WS contract, ElevenLabs/Telnyx/MCP integration, pages, branding, the **6-hour build order with a cut line**. | Before you write code. Keep open all day. |
-| [`01-PITFALLS.md`](./01-PITFALLS.md) | Every bug-prone area — Rufen lessons + ElevenLabs/Telnyx/MCP specifics — phrased as *watch-out-because-do*. | When something silently breaks (it will). |
-| [`02-PITCH.md`](./02-PITCH.md) | First sentence, wedge, 7-slide deck, rubric self-score, **evidence plan**, solo handling, the 3-minute script. **55% of your score lives here.** | Tonight + the last 90 min before pitching. |
-| [`03-PREFLIGHT.md`](./03-PREFLIGHT.md) | Do-these-before-Saturday checklist: accounts, Telnyx Level-2 verification, ngrok, hotspot, backup video. | **Tonight.** Some items have approval lag. |
+| [`00-DESIGN.md`](./docs/00-DESIGN.md) | Architecture, stack, data model, API, WS contract, ElevenLabs/Telnyx/MCP integration, pages, branding, the **6-hour build order with a cut line**. | Before you write code. Keep open all day. |
+| [`01-PITFALLS.md`](./docs/01-PITFALLS.md) | Every bug-prone area — Rufen lessons + ElevenLabs/Telnyx/MCP specifics — phrased as *watch-out-because-do*. | When something silently breaks (it will). |
+| [`02-PITCH.md`](./docs/02-PITCH.md) | First sentence, wedge, 7-slide deck, rubric self-score, **evidence plan**, solo handling, the 3-minute script. **55% of your score lives here.** | Tonight + the last 90 min before pitching. |
+| [`03-PREFLIGHT.md`](./docs/03-PREFLIGHT.md) | Do-these-before-Saturday checklist: accounts, Telnyx Level-2 verification, ngrok, hotspot, backup video. | **Tonight.** Some items have approval lag. |
 
 ## The five decisions already locked
 
