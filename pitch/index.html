@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Outbound Autopilot — Rufen × Cara8</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <style>
+    :root{
+      --bg:#0a0a0a; --panel:#0d0d0d; --card:#121212; --line:#212121;
+      --muted:#8a8a8a; --fg:#e0e0e0; --brand:#F97316;
+    }
+    .reveal{ font-family:Inter,system-ui,sans-serif; color:var(--fg); font-weight:400; }
+    .reveal .slides{ text-align:left; }
+    .reveal .slides section{ height:100%; padding:0; }
+    html,body{ background:var(--bg); }
+    .reveal .backgrounds{ background:var(--bg); }
+
+    /* layout helpers */
+    .pad{ padding:64px 72px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; }
+    .split{ display:grid; grid-template-columns:38% 62%; height:100%; }
+    .split.right{ grid-template-columns:62% 38%; }
+    .imgfill{ background-size:cover; background-position:center; }
+
+    /* type */
+    .reveal h1{ font-size:62px; font-weight:700; color:#fff; letter-spacing:-.02em; line-height:1.05; margin:0; }
+    .reveal h2{ font-size:44px; font-weight:700; color:#fff; letter-spacing:-.02em; line-height:1.1; margin:0 0 28px; }
+    .kicker{ color:var(--muted); font-size:20px; font-weight:400; }
+    .lead{ color:var(--muted); font-size:22px; }
+    .brand{ color:var(--brand); }
+    .reveal p{ margin:0; }
+
+    .badge{ display:inline-block; background:rgba(249,115,22,.12); color:var(--brand);
+      border:1px solid rgba(249,115,22,.35); padding:7px 16px; border-radius:999px;
+      font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+
+    /* cards / banners */
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; }
+    .card.brand{ border-color:rgba(249,115,22,.45); }
+    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:28px; }
+    .banner{ border-radius:12px; padding:18px 22px; font-size:20px; display:flex; gap:12px; align-items:center; }
+    .banner.warn{ background:rgba(245,184,32,.12); border:1px solid rgba(245,184,32,.4); color:#f5d98a; }
+    .banner.ok{ background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.4); color:#7ee2b8; }
+    .muted{ color:var(--muted); }
+    .row{ display:flex; align-items:flex-start; gap:14px; }
+    .arrow{ color:var(--brand); font-weight:700; }
+    .num{ color:var(--muted); font-size:16px; font-variant-numeric:tabular-nums; }
+    .rule{ height:2px; background:linear-gradient(90deg,var(--brand),transparent); border:0; margin:8px 0 6px; }
+    .step h3{ font-size:24px; color:#fff; margin:2px 0 0; font-weight:600; }
+    .feat h3{ font-size:24px; color:#fff; margin:0; font-weight:600; }
+    .feat p{ color:var(--muted); font-size:18px; }
+    .dot{ width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+      background:rgba(249,115,22,.12); color:var(--brand); flex:0 0 auto; }
+    ul.clean{ list-style:none; margin:14px 0 0; padding:0; }
+    ul.clean li{ margin:0 0 14px; font-size:24px; color:var(--fg); display:flex; gap:12px; align-items:center; }
+    ul.clean li::before{ content:""; width:7px;height:7px;border-radius:50%;background:var(--brand); flex:0 0 auto; }
+
+    /* chart */
+    .chart{ display:flex; align-items:flex-end; gap:48px; height:280px; margin-bottom:34px; padding:0 10px; border-left:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .bar{ width:120px; background:var(--brand); border-radius:6px 6px 0 0; position:relative; }
+    .bar span{ position:absolute; bottom:-26px; left:50%; transform:translateX(-50%); white-space:nowrap; text-align:center; color:var(--muted); font-size:13px; }
+    .reveal .controls{ color:var(--brand); }
+    .reveal .progress{ color:var(--brand); }
+  </style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- 1 — Title -->
+  <section>
+    <div class="split">
+      <div class="imgfill" style="background-image:url(img/showroom.png)"></div>
+      <div class="pad">
+        <div><span class="badge">Hackathon Pitch</span></div>
+        <p class="kicker" style="margin-top:26px;font-size:30px;color:#fff;font-weight:500;">Rufen × Cara8</p>
+        <h1 style="margin-top:18px;">Outbound Autopilot</h1>
+        <p class="lead" style="margin-top:24px;">Lists <span class="brand">→</span> booked appointments</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 — Story -->
+  <section>
+    <div class="split">
+      <div class="pad">
+        <h1 style="font-size:50px;">Our story began<br/>with a divorce 🥲</h1>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:36px;box-sizing:border-box;">
+        <img src="img/phone.png" style="max-height:600px;width:auto;border-radius:28px;border:1px solid var(--line);" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 — Problem -->
+  <section><div class="pad">
+    <div><span class="badge">The Problem</span></div>
+    <h2 style="margin-top:22px;">Dealerships have revenue they<br/>can't execute fast enough</h2>
+    <div class="grid2">
+      <div class="card brand">Recall Campaigns</div>
+      <div class="card brand">Service Reminders</div>
+      <div class="card brand">Warranty Checks</div>
+      <div class="card brand">Tire Change</div>
+      <div class="card brand">Reactivation</div>
+      <div class="card brand">Lead Follow-Up</div>
+    </div>
+    <div class="banner warn" style="margin-top:22px;">
+      <span>⚠</span><span><b style="color:#fff;">Problem: outbound execution.</b> Teams are busy. Calls don't scale.</span>
+    </div>
+  </div></section>
+
+  <!-- 4 — Why now -->
+  <section><div class="pad">
+    <div><span class="badge">Why Now</span></div>
+    <h2 style="margin-top:22px;">Cara8 is already in the workflow</h2>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:center;">
+      <img src="img/tablet.png" style="width:100%;border-radius:12px;border:1px solid var(--line);" />
+      <div>
+        <p class="lead" style="margin-bottom:30px;">Existing product. New workflow.</p>
+        <div class="grid3" style="grid-template-columns:1fr;gap:22px;">
+          <div class="row"><span class="arrow">→</span><div class="feat"><h3>Live</h3><p>Deployed with dealers</p></div></div>
+          <div class="row"><span class="arrow">→</span><div class="feat"><h3>Trusted</h3><p>Already in use</p></div></div>
+          <div class="row"><span class="arrow">→</span><div class="feat"><h3>Rufen.ai</h3><p>Voice AI + outbound automation</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- 5 — Demo use case -->
+  <section><div class="pad">
+    <div><span class="badge">Demo Use Case</span></div>
+    <h2 style="margin-top:22px;">Recall campaigns expose the pain</h2>
+    <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:48px;align-items:center;">
+      <div>
+        <h3 style="color:#fff;font-size:26px;margin:0 0 6px;">Recall list</h3>
+        <ul class="clean">
+          <li>Model / year</li><li>VIN / plate</li><li>Phone</li><li>Recall code / repair</li>
+        </ul>
+      </div>
+      <img src="img/mechanics.png" style="width:100%;border-radius:12px;border:1px solid var(--line);" />
+    </div>
+    <div class="grid2" style="margin-top:24px;">
+      <div class="card"><h3 style="color:#fff;font-size:22px;margin:0 0 6px;">Today</h3><p class="muted" style="font-size:19px;">Manual calls</p></div>
+      <div class="card brand"><h3 style="color:#fff;font-size:22px;margin:0 0 6px;">With Rufen × Cara8</h3><p class="muted" style="font-size:19px;">AI handles outreach, booking, and notes</p></div>
+    </div>
+  </div></section>
+
+  <!-- 6 — The feature -->
+  <section>
+    <div class="split right">
+      <div class="pad">
+        <div><span class="badge">The Feature</span></div>
+        <h2 style="margin-top:22px;">Outbound campaign<br/>automation inside Cara8</h2>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div class="step"><div class="num">01</div><hr class="rule"/><h3>Import list</h3></div>
+          <div class="step"><div class="num">02</div><hr class="rule"/><h3>Set up</h3></div>
+          <div class="step"><div class="num">03</div><hr class="rule"/><h3>AI calls</h3></div>
+          <div class="step"><div class="num">04</div><hr class="rule"/><h3>Track follow-up</h3></div>
+        </div>
+      </div>
+      <div class="imgfill" style="background-image:url(img/circuit.png)"></div>
+    </div>
+  </section>
+
+  <!-- 7 — Business impact -->
+  <section><div class="pad">
+    <div><span class="badge">Business Impact</span></div>
+    <h2 style="margin-top:18px;">One campaign = <span class="brand">€75K–€150K</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;">
+      <div>
+        <p class="muted" style="text-align:right;font-size:14px;margin-bottom:8px;">Gross Billing Potential (€)</p>
+        <div class="chart">
+          <div class="bar" style="height:42%;"><span>25% Booking Rate</span></div>
+          <div class="bar" style="height:84%;background:#fb8a4c;"><span>50% Booking Rate</span></div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:30px;color:#fff;font-weight:600;">€202/hour</p>
+        <p class="muted" style="font-size:20px;margin-bottom:24px;">Workshop rate</p>
+        <p style="font-size:24px;color:#fff;font-weight:600;">Recurring use cases</p>
+        <p class="muted" style="font-size:19px;">Tires • Service • Warranty • Reactivation • Follow-up</p>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:24px;">
+      <div class="card brand"><h3 style="color:#fff;font-size:22px;margin:0 0 4px;">Conservative</h3><p class="muted" style="font-size:18px;">500 × 25% × 3h × €202 = <b style="color:#fff;">€75,750</b></p></div>
+      <div class="card brand"><h3 style="color:#fff;font-size:22px;margin:0 0 4px;">Strong</h3><p class="muted" style="font-size:18px;">500 × 50% × 3h × €202 = <b style="color:#fff;">€151,500</b></p></div>
+    </div>
+  </div></section>
+
+  <!-- 8 — Why we win -->
+  <section>
+    <div class="split">
+      <div class="imgfill" style="background-image:url(img/boardroom.png)"></div>
+      <div class="pad">
+        <div><span class="badge">Why We Win</span></div>
+        <h2 style="margin-top:22px;">Feature extension.<br/>Real adoption path.</h2>
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <div class="row"><span class="dot">▣</span><div class="feat"><h3>Live clients</h3><p>Already deployed.</p></div></div>
+          <div class="row"><span class="dot">◉</span><div class="feat"><h3>Automotive voice AI</h3><p>VIN-aware. Capacity-aware.</p></div></div>
+          <div class="row"><span class="dot">➜</span><div class="feat"><h3>Wedge → platform</h3><p>Recall campaigns first.</p></div></div>
+        </div>
+        <div class="banner ok" style="margin-top:24px;">
+          <span>✓</span><span><b style="color:#fff;">Real dealerships. Real product. Real revenue.</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({ width:1280, height:720, margin:0, controls:true, progress:true,
+    hash:true, transition:"slide", center:false });
+</script>
+</body>
+</html>

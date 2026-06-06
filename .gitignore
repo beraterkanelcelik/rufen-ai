@@ -38,3 +38,7 @@ test-results/
 
 # local test contacts with real numbers (PII — keep local)
 examples/demo_contacts.csv
+
+# stray root screenshots
+/deck-*.png
+/campaigns-clean.png
