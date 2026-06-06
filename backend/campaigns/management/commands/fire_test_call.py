@@ -18,11 +18,11 @@ from campaigns.eleven import create_agent, get_conversation, start_call
 
 DEMO_PROMPT = (
     "You are a friendly AI assistant making a quick test call on behalf of the "
-    "Rufen team. You are speaking with {name}. Their record: {context}. Briefly "
+    "Rufen team. You are speaking with {{name}}. Their record: {{context}}. Briefly "
     "introduce yourself as an AI assistant, confirm they can hear you clearly, "
     "ask if now is a good time, thank them, and end the call. Keep it under 30 seconds."
 )
-DEMO_FIRST = "Hi {name}, this is a Rufen test assistant — can you hear me okay?"
+DEMO_FIRST = "Hi {{name}}, this is a Rufen test assistant — can you hear me okay?"
 
 
 class Command(BaseCommand):

@@ -75,6 +75,9 @@ Expected: `{"success":true,"conversation_id":"...","sip_call_id":"..."}` and you
 - **"Temporarily unavailable" / route fails:** the **Outbound Voice Profile** (step 3) isn't attached or doesn't allow the destination country.
 - **Caller ID wrong / rejected:** the number must be **assigned to this connection** (step 5).
 - **TLS chosen:** then Media Encryption must be **Required** on the ElevenLabs side.
+- **SIP 480 on a specific number:** that handset was unreachable/off at dial time — it's destination-side, not config. Other numbers on the same trunk still connect.
+- **Robotic / "electronical" audio:** the SIP connection was offering **G729** (compressed). Remove it — keep only **G722, G711A, G711U** (`PATCH /v2/fqdn_connections/{id}` → `inbound.codecs`). Realistic ceiling on a mobile PSTN leg is clean G711 (8 kHz); G722 wideband only if the whole path is HD.
+- **Agent says the placeholder literally (e.g. "Hi {name}"):** ElevenLabs dynamic variables use **double braces** `{{name}}` / `{{context}}` — single braces are NOT substituted. (Fixed in `generator.py` + `fire_test_call`.)
 
 ---
 

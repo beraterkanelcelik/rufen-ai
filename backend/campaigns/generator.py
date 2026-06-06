@@ -13,9 +13,10 @@ SYSTEM = (
     "STRICT JSON with exactly these keys: "
     '{"script_prompt": str, "first_message": str, '
     '"extraction_schema": [{"key": str, "type": "string|boolean|number|date", "desc": str}]}. '
-    "The agent calls on behalf of the company; reference fields as {name} and {context} "
-    "placeholders; keep calls under 90 seconds; be polite; clearly identify as an AI "
-    "assistant. Return ONLY the JSON object, no prose."
+    "The agent calls on behalf of the company. Reference customer fields with DOUBLE "
+    "curly braces EXACTLY like {{name}} and {{context}} — this is ElevenLabs' "
+    "dynamic-variable syntax; never use single braces. Keep calls under 90 seconds; "
+    "be polite; clearly identify as an AI assistant. Return ONLY the JSON object, no prose."
 )
 
 ALLOWED_TYPES = {"string", "boolean", "number", "date"}
