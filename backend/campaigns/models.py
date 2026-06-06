@@ -24,7 +24,7 @@ class Campaign(models.Model):
     # Script (AI-generated, user-editable).
     script_prompt = models.TextField(blank=True)
     first_message = models.TextField(blank=True)
-    extraction_schema = models.JSONField(default=list)  # [{key,type,desc}]
+    extraction_schema = models.JSONField(default=list, blank=True)  # [{key,type,desc}]
     voice_id = models.CharField(max_length=64, blank=True)
     language = models.CharField(max_length=8, default="en")
 
@@ -32,9 +32,12 @@ class Campaign(models.Model):
     concurrency = models.PositiveIntegerField(default=2)
     retry_delay_minutes = models.PositiveIntegerField(default=60)
     max_attempts = models.PositiveIntegerField(default=3)
-    retry_on = models.JSONField(default=list)  # default set in save(); see below
+    retry_on = models.JSONField(default=list, blank=True)  # default set in save(); see below
 
     eleven_agent_id = models.CharField(max_length=128, blank=True)
+    # ElevenLabs allows 1 concurrent call PER AGENT, so a campaign needs a pool
+    # of `concurrency` agents to dial in parallel. eleven_agent_id stays = pool[0].
+    eleven_agent_ids = models.JSONField(default=list, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
@@ -71,7 +74,7 @@ class CampaignContact(models.Model):
     )
     attempts = models.PositiveIntegerField(default=0)
     last_outcome = models.CharField(max_length=32, blank=True)
-    result = models.JSONField(default=dict)  # extracted fields
+    result = models.JSONField(default=dict, blank=True)  # extracted fields
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -95,7 +98,7 @@ class CallAttempt(models.Model):
     attempt_no = models.PositiveIntegerField()
     conversation_id = models.CharField(max_length=128, blank=True)
     outcome = models.CharField(max_length=32, choices=Outcome.choices, blank=True)
-    transcript = models.JSONField(default=list)  # [{role, text, time_in_call_secs}]
+    transcript = models.JSONField(default=list, blank=True)  # [{role, text, time_in_call_secs}]
 
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)

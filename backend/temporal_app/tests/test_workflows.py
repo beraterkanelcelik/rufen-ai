@@ -67,7 +67,8 @@ async def _run_with_outcomes(outcomes, max_attempts=3, retry_delay_minutes=60, w
     updates = []
 
     @activity.defn(name="place_call_activity")
-    async def fake_place(contact_id: int, campaign_id: int, attempt_no: int) -> dict:
+    async def fake_place(contact_id: int, campaign_id: int, attempt_no: int,
+                         agent_id: str = "") -> dict:
         calls.append(attempt_no)
         return {"conversation_id": f"conv-{attempt_no}", "outcome": next(seq),
                 "transcript": [], "result": {"agreed_to_book": True}}
@@ -90,7 +91,7 @@ async def _run_with_outcomes(outcomes, max_attempts=3, retry_delay_minutes=60, w
                           activities=[fake_place, fake_update]):
             res = await env.client.execute_workflow(
                 ContactCallWorkflow.run,
-                args=[1, 1, RETRY_ON, retry_delay_minutes, max_attempts],
+                args=[1, 1, "agent-test", RETRY_ON, retry_delay_minutes, max_attempts],
                 id=wf_id, task_queue="test-q",
             )
     return res, calls, updates
@@ -140,8 +141,9 @@ async def test_campaign_workflow_fans_out_and_finalizes():
     placed, finalized = [], []
 
     @activity.defn(name="place_call_activity")
-    async def fake_place(contact_id: int, campaign_id: int, attempt_no: int) -> dict:
-        placed.append(contact_id)
+    async def fake_place(contact_id: int, campaign_id: int, attempt_no: int,
+                         agent_id: str = "") -> dict:
+        placed.append((contact_id, agent_id))
         return {"conversation_id": "c", "outcome": "answered", "transcript": [], "result": {}}
 
     @activity.defn(name="update_contact_status_activity")
@@ -164,9 +166,11 @@ async def test_campaign_workflow_fans_out_and_finalizes():
                           activities=[fake_place, fake_update, fake_finalize]):
             res = await env.client.execute_workflow(
                 CampaignWorkflow.run,
-                args=[1, [10, 11], 2, RETRY_ON, 60, 3],
+                args=[1, [10, 11], 2, ["agentA", "agentB"], RETRY_ON, 60, 3],
                 id="campaign-test-1", task_queue="test-q",
             )
     assert res["contacts"] == 2
-    assert sorted(placed) == [10, 11]
+    assert sorted(c for c, _ in placed) == [10, 11]
+    # each parallel contact got a DISTINCT agent from the pool
+    assert {a for _, a in placed} == {"agentA", "agentB"}
     assert finalized == [1]

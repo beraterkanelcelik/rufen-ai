@@ -40,6 +40,7 @@ class ContactCallWorkflow:
         self,
         contact_id: int,
         campaign_id: int,
+        agent_id: str,
         retry_on: list,
         retry_delay_minutes: int,
         max_attempts: int,
@@ -50,9 +51,12 @@ class ContactCallWorkflow:
             try:
                 res = await workflow.execute_activity(
                     place_call_activity,
-                    args=[contact_id, campaign_id, attempt],
+                    args=[contact_id, campaign_id, attempt, agent_id],
                     start_to_close_timeout=timedelta(minutes=5),
-                    retry_policy=RetryPolicy(maximum_attempts=2),  # transient API errors only
+                    # NO Temporal auto-retry: re-running this activity would place a
+                    # SECOND real call. A failed dial is caught below and handled by
+                    # the outcome-level retry (a fresh, delayed attempt) instead.
+                    retry_policy=RetryPolicy(maximum_attempts=1),
                 )
             except ActivityError:
                 # Dial failed (e.g. telephony not configured yet) — treat as a
@@ -96,21 +100,24 @@ class CampaignWorkflow:
         campaign_id: int,
         contact_ids: list,
         concurrency: int,
+        agent_ids: list,
         retry_on: list,
         retry_delay_minutes: int,
         max_attempts: int,
     ) -> dict:
         concurrency = max(1, int(concurrency))
+        pool = agent_ids or [""]  # one agent per concurrency slot (ElevenLabs: 1 call/agent)
         # Concurrency cap via batching (deterministic, SDK-version-agnostic).
         for i in range(0, len(contact_ids), concurrency):
             batch = contact_ids[i:i + concurrency]
             await asyncio.gather(*[
                 workflow.execute_child_workflow(
                     ContactCallWorkflow.run,
-                    args=[cid, campaign_id, retry_on, retry_delay_minutes, max_attempts],
+                    args=[cid, campaign_id, pool[j % len(pool)],
+                          retry_on, retry_delay_minutes, max_attempts],
                     id=f"contact-{campaign_id}-{cid}",
                 )
-                for cid in batch
+                for j, cid in enumerate(batch)
             ], return_exceptions=True)
 
         await workflow.execute_activity(

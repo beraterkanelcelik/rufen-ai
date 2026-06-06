@@ -38,6 +38,13 @@ async def _publish(redis: Redis, campaign_id, frame: dict) -> None:
     await redis.publish(_channel(campaign_id), json.dumps(frame))
 
 
+def _extract_results(conversation: dict) -> dict:
+    """ElevenLabs returns data_collection_results as {key: {value, rationale, ...}}.
+    Flatten to {key: value} for storage + the UI."""
+    raw = (conversation.get("analysis") or {}).get("data_collection_results") or {}
+    return {k: (v.get("value") if isinstance(v, dict) else v) for k, v in raw.items()}
+
+
 @sync_to_async
 def _load_contact_and_campaign(contact_id, campaign_id):
     from django.db import close_old_connections
@@ -90,13 +97,16 @@ def _close_attempt(attempt_id, contact_id, conversation_id, outcome, transcript)
 
 
 @activity.defn
-async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int) -> dict:
+async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int,
+                              agent_id: str = "") -> dict:
     """Place one outbound call, stream transcript to Redis, return the outcome.
 
-    Returns {conversation_id, outcome, transcript, result}. ``result`` is the
-    post-call ``analysis.data_collection_results`` (may be empty until processed).
+    ``agent_id`` is the ElevenLabs agent to use for THIS call (one agent per
+    concurrency slot — ElevenLabs caps 1 concurrent call per agent). Falls back to
+    the campaign's primary agent. Returns {conversation_id, outcome, transcript, result}.
     """
     contact, campaign = await _load_contact_and_campaign(contact_id, campaign_id)
+    use_agent = agent_id or campaign["eleven_agent_id"]
     attempt_id = await _open_attempt(contact_id, attempt_no)
 
     redis = Redis.from_url(os.environ["REDIS_URL"])
@@ -109,7 +119,7 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
         })
 
         dyn = {"name": contact["name"], "context": contact["context"] or ""}
-        res = await start_call(campaign["eleven_agent_id"], contact["phone"], dyn)
+        res = await start_call(use_agent, contact["phone"], dyn)
         conversation_id = res["conversation_id"]
 
         seen = 0
@@ -118,7 +128,14 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
         data = {}
         elapsed = 0
         while status not in ("done", "failed") and elapsed < MAX_CALL_SECONDS:
-            data = await get_conversation(conversation_id)
+            try:
+                data = await get_conversation(conversation_id)
+            except Exception:
+                # transient HTTP blip while polling — keep the call alive, retry
+                # next tick rather than failing the activity (which would re-dial).
+                await asyncio.sleep(POLL_INTERVAL_SECONDS)
+                elapsed += POLL_INTERVAL_SECONDS
+                continue
             status = data.get("status")
             transcript = data.get("transcript") or []
             for turn in transcript[seen:]:
@@ -134,7 +151,7 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
             elapsed += POLL_INTERVAL_SECONDS
 
         outcome = classify_outcome(status, transcript)
-        result = (data.get("analysis") or {}).get("data_collection_results") or {}
+        result = _extract_results(data)
 
         normalized = [
             {"role": t.get("role"), "text": t.get("message"),

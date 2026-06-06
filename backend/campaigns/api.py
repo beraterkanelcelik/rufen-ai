@@ -71,25 +71,30 @@ def campaign_contacts(request, pk):
     return Response(ContactSerializer(qs, many=True).data)
 
 
-def _ensure_agent(campaign):
-    """Create the per-campaign ElevenLabs agent (prompt + voice + data-collection)
-    if it doesn't have one yet. Returns the agent id."""
-    if campaign.eleven_agent_id:
-        return campaign.eleven_agent_id
-    agent_id = async_to_sync(create_agent)(
-        name=f"Rufen #{campaign.id} — {campaign.name}"[:100],
-        system_prompt=campaign.script_prompt,
-        first_message=campaign.first_message,
-        voice_id=campaign.voice_id,
-        language=campaign.language,
-        data_collection=campaign.extraction_schema,
-    )
-    campaign.eleven_agent_id = agent_id
-    campaign.save(update_fields=["eleven_agent_id"])
-    return agent_id
+def _ensure_agents(campaign):
+    """Create a POOL of ElevenLabs agents — one per concurrency slot, because
+    ElevenLabs allows only 1 concurrent call per agent. Idempotent. Returns the
+    list of agent ids."""
+    if campaign.eleven_agent_ids:
+        return campaign.eleven_agent_ids
+    pool_size = max(1, int(campaign.concurrency or 1))
+    agent_ids = []
+    for i in range(pool_size):
+        agent_ids.append(async_to_sync(create_agent)(
+            name=f"Rufen #{campaign.id}/{i + 1} — {campaign.name}"[:100],
+            system_prompt=campaign.script_prompt,
+            first_message=campaign.first_message,
+            voice_id=campaign.voice_id,
+            language=campaign.language,
+            data_collection=campaign.extraction_schema,
+        ))
+    campaign.eleven_agent_ids = agent_ids
+    campaign.eleven_agent_id = agent_ids[0]
+    campaign.save(update_fields=["eleven_agent_ids", "eleven_agent_id"])
+    return agent_ids
 
 
-def _start_campaign_workflow(campaign, contact_ids):
+def _start_campaign_workflow(campaign, contact_ids, agent_ids):
     """Connect a Temporal client and start CampaignWorkflow (id=campaign-{id})."""
     async def _run():
         client = await Client.connect(
@@ -98,7 +103,7 @@ def _start_campaign_workflow(campaign, contact_ids):
         )
         await client.start_workflow(
             "CampaignWorkflow",
-            args=[campaign.id, contact_ids, campaign.concurrency,
+            args=[campaign.id, contact_ids, campaign.concurrency, agent_ids,
                   campaign.retry_on, campaign.retry_delay_minutes, campaign.max_attempts],
             id=f"campaign-{campaign.id}",
             task_queue="campaigns",
@@ -116,12 +121,12 @@ def campaign_launch(request, pk):
     started = False
     if contact_ids:
         try:
-            _ensure_agent(campaign)
+            agent_ids = _ensure_agents(campaign)
         except Exception as exc:
             return Response({"detail": f"agent creation failed: {exc}"},
                             status=status.HTTP_502_BAD_GATEWAY)
         try:
-            _start_campaign_workflow(campaign, contact_ids)
+            _start_campaign_workflow(campaign, contact_ids, agent_ids)
             started = True
         except Exception as exc:
             # idempotent: a re-launch of a running campaign is fine
