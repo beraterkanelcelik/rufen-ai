@@ -11,6 +11,7 @@ import re
 
 from asgiref.sync import async_to_sync
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path
 from django.utils import timezone
@@ -20,8 +21,12 @@ from rest_framework.response import Response
 from temporalio.client import Client
 
 from .eleven import create_agent, get_conversation, list_voices, start_call
+from .export import build_csv
 from .generator import generate_script
 from .importer import parse_contacts
+
+# Hard cap on concurrency = min(ElevenLabs plan, Telnyx channels) — see CLAUDE.md.
+CONCURRENCY_CAP = 2
 from .models import Campaign
 from .serializers import (
     CampaignCreateSerializer,
@@ -117,6 +122,10 @@ def _start_campaign_workflow(campaign, contact_ids, agent_ids):
 def campaign_launch(request, pk):
     """Create the ElevenLabs agent + start the Temporal CampaignWorkflow."""
     campaign = get_object_or_404(Campaign, pk=pk)
+    # defensive server-side cap (the wizard slider also caps at 2)
+    if campaign.concurrency > CONCURRENCY_CAP:
+        campaign.concurrency = CONCURRENCY_CAP
+        campaign.save(update_fields=["concurrency"])
     contact_ids = list(campaign.contacts.values_list("id", flat=True))
 
     started = False
@@ -147,6 +156,16 @@ def campaign_launch(request, pk):
         "workflow_started": started,
         "telephony_ready": telephony_ready,
     })
+
+
+@api_view(["GET"])
+def campaign_export(request, pk):
+    """Download campaign results as a sanitized CSV (formula-injection safe)."""
+    campaign = get_object_or_404(Campaign, pk=pk)
+    safe = re.sub(r"[^a-z0-9]+", "_", campaign.name.lower()).strip("_") or "campaign"
+    resp = HttpResponse(build_csv(campaign), content_type="text/csv")
+    resp["Content-Disposition"] = f'attachment; filename="{safe}_results.csv"'
+    return resp
 
 
 @api_view(["POST"])
@@ -270,4 +289,5 @@ urlpatterns = [
     path("contacts/parse", contacts_parse),
     path("test-call", test_call),
     path("test-call/<str:cid>", test_call_status),
+    path("campaigns/<int:pk>/export", campaign_export),
 ]

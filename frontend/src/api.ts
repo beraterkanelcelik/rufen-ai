@@ -47,6 +47,9 @@ export const createCampaign = (body: CreateCampaignBody) =>
 export const launchCampaign = (id: string) =>
   http<Campaign>(`/campaigns/${id}/launch`, { method: "POST" });
 
+/** Direct URL for the sanitized server-side CSV export (open in a new tab). */
+export const campaignExportUrl = (id: string) => `${API_BASE}/campaigns/${id}/export`;
+
 // ── Wizard support: real AI generation, real voices, real file parsing ──────
 export interface GeneratedScript {
   script_prompt: string;

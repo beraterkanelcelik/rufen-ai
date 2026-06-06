@@ -91,6 +91,8 @@ class CampaignCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated):
         contacts = validated.pop("contacts", [])
+        if "concurrency" in validated:  # cap at min(ElevenLabs, Telnyx) = 2
+            validated["concurrency"] = max(1, min(2, int(validated["concurrency"] or 1)))
         campaign = Campaign.objects.create(**validated)
         for c in contacts:
             CampaignContact.objects.create(

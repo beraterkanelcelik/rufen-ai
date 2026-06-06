@@ -58,6 +58,22 @@ async def start_call(agent_id, to_number, dynamic_variables):
         return r.json()
 
 
+def list_agents(page_size=100):
+    """Sync: list ConvAI agents in the workspace → [{agent_id, name, ...}]."""
+    with httpx.Client(timeout=30) as c:
+        r = c.get(f"{BASE}/convai/agents?page_size={page_size}", headers=_h())
+        r.raise_for_status()
+        return r.json().get("agents", [])
+
+
+def delete_agent(agent_id):
+    """Sync: delete one ConvAI agent."""
+    with httpx.Client(timeout=30) as c:
+        r = c.delete(f"{BASE}/convai/agents/{agent_id}", headers=_h())
+        r.raise_for_status()
+        return True
+
+
 def list_voices():
     """Sync: list the workspace's ElevenLabs voices for the wizard picker.
     Returns [{id, name, accent, desc, preview_url}]."""

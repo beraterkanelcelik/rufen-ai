@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchCampaign, fetchContacts, subscribeLive } from "../api";
+import { campaignExportUrl, fetchCampaign, fetchContacts, subscribeLive } from "../api";
 import type {
   AggregateEvent,
   Campaign,
@@ -15,7 +15,6 @@ import { ProgressBar } from "../components/ui/ProgressBar";
 import { StatCard } from "../components/monitor/StatCard";
 import { ConcurrencyGauge } from "../components/monitor/ConcurrencyGauge";
 import { ContactRow } from "../components/monitor/ContactRow";
-import { downloadCsv } from "../components/monitor/exportCsv";
 
 type TranscriptMap = Record<string, TranscriptTurn[]>;
 type RetryMap = Record<string, number>;
@@ -216,7 +215,7 @@ export default function Monitor() {
           </div>
           <Button
             variant="outline"
-            onClick={() => downloadCsv(campaign, contacts)}
+            onClick={() => window.open(campaignExportUrl(campaign.id), "_blank")}
           >
             <DownloadIcon /> Export CSV
           </Button>
