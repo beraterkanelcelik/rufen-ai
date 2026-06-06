@@ -95,7 +95,7 @@ class CallAttempt(models.Model):
     attempt_no = models.PositiveIntegerField()
     conversation_id = models.CharField(max_length=128, blank=True)
     outcome = models.CharField(max_length=32, choices=Outcome.choices, blank=True)
-    transcript = models.JSONField(default=list)  # [{role, text, ts}]
+    transcript = models.JSONField(default=list)  # [{role, text, time_in_call_secs}]
 
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)

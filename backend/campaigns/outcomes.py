@@ -10,6 +10,9 @@ docs/01-PITFALLS.md.
 def classify_outcome(status, transcript):
     if status == "failed":
         return "failed"
-    if status in ("done", "processing"):
+    # Terminal + non-terminal "live" statuses all classify off transcript presence.
+    # In the real flow the activity only calls this at a terminal status, but
+    # handling initiated/in-progress keeps the classifier robust if called early.
+    if status in ("done", "processing", "in-progress", "initiated"):
         return "answered" if transcript else "no_answer"
     return "failed"

@@ -31,7 +31,11 @@ def _rows(fileobj, filename):
     wb = load_workbook(fileobj, read_only=True, data_only=True)
     ws = wb.active
     header = [str(c.value).strip().lower() if c.value else "" for c in ws[1]]
-    return [dict(zip(header, [c.value for c in row])) for row in ws.iter_rows(min_row=2)]
+    rows = []
+    for row in ws.iter_rows(min_row=2):
+        # skip empty header columns so blank headers can't clobber real keys
+        rows.append({h: c.value for h, c in zip(header, row) if h})
+    return rows
 
 
 def parse_contacts(fileobj, filename, region="DE"):

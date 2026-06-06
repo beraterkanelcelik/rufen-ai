@@ -34,6 +34,7 @@ services:
     build: ./backend
     command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
     env_file: .env
+    restart: unless-stopped
     ports: ["8000:8000"]
     volumes: ["./backend:/app"]
     depends_on:
@@ -45,6 +46,7 @@ services:
     build: ./backend
     command: python -m temporal_app.worker
     env_file: .env
+    restart: unless-stopped
     volumes: ["./backend:/app"]
     depends_on:
       db: { condition: service_healthy }

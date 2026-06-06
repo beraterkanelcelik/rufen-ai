@@ -17,5 +17,13 @@ def test_processing_with_transcript_is_answered():
     assert classify_outcome("processing", [{"role": "agent", "message": "hello"}]) == "answered"
 
 
+def test_in_progress_with_transcript_is_answered():
+    assert classify_outcome("in-progress", [{"role": "agent", "message": "hi"}]) == "answered"
+
+
+def test_in_progress_empty_is_no_answer():
+    assert classify_outcome("in-progress", []) == "no_answer"
+
+
 def test_unknown_status_is_failed():
     assert classify_outcome("weird", []) == "failed"
