@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: rufen
+      POSTGRES_USER: rufen
+      POSTGRES_PASSWORD: rufen
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rufen"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  temporal:
+    image: temporalio/temporal:latest
+    # run as root so the dev server can create its SQLite file in the named volume
+    user: root
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--namespace", "rufen", "--db-filename", "/data/t.db"]
+    ports: ["7233:7233", "8233:8233"]   # 8233 = Temporal UI
+    volumes: ["temporaldata:/data"]
+
+  web:
+    build: ./backend
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes: ["./backend:/app"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      temporal: { condition: service_started }
+
+  temporal-worker:
+    build: ./backend
+    command: python -m temporal_app.worker
+    env_file: .env
+    volumes: ["./backend:/app"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      temporal: { condition: service_started }
+
+volumes:
+  pgdata: {}
+  temporaldata: {}
