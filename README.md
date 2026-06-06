@@ -1,32 +1,33 @@
-# Hackathon Plan — Agent-Native Parallel Calling
+# Rufen Campaign — Outbound AI Calling Campaigns
 
-**Event:** AI BEAVERS × Mollie Founder Hackathon · House of AI, Hamburg · Sat **June 6, 2026** · submit by **19:00**.
+**Event:** AI BEAVERS × Mollie Founder Hackathon · House of AI, Hamburg · Sat **June 6, 2026** · submit by **19:00**. 2-person team (backend + UX in parallel).
 
-Product name: **Rufen AI** (reusing your existing brand — judges don't know it; reusing a *name* is allowed, only importing the old *codebase* / demoing the existing product is not). Use your own logos.
+> One line: *"Upload an Excel of customers, describe the goal once, and an AI call team works the whole list in parallel — retrying no-answers — and hands back a structured result per customer."* Concrete wedge: an automotive recall team calling 50 owners individually to book service.
 
-> One line: *"Describe a phone job in plain English; Rufen AI interviews you for the missing details, then runs the call(s) in parallel and hands back structured, comparable answers — and any AI agent can trigger the same thing over MCP."*
+## Docs
 
-## The four docs
+| File | What's in it |
+|---|---|
+| [`docs/00-DESIGN.md`](./docs/00-DESIGN.md) | Concept, data model, wizard, **Temporal workflows**, API, ElevenLabs integration, build order + cut line. |
+| [`docs/plan/2026-06-06-rufen-campaign.md`](./docs/plan/2026-06-06-rufen-campaign.md) | **Backend-first** step-by-step implementation plan (execute this with Claude Code). |
+| [`docs/01-PITFALLS.md`](./docs/01-PITFALLS.md) | Bug-prone areas (Temporal, Channels, ElevenLabs/Telnyx) as *watch-out-because-do*. |
+| [`docs/03-PREFLIGHT.md`](./docs/03-PREFLIGHT.md) | Account/SIP setup checklist. |
+| `docs/02-PITCH.md` | Pitch/strategy (local only, gitignored). |
+| [`CLAUDE.md`](./CLAUDE.md) | Always-loaded operating manual for the build. |
 
-| File | What it's for | When you read it |
-|---|---|---|
-| [`00-DESIGN.md`](./docs/00-DESIGN.md) | Architecture, stack, data model, API, WS contract, ElevenLabs/Telnyx/MCP integration, pages, branding, the **6-hour build order with a cut line**. | Before you write code. Keep open all day. |
-| [`01-PITFALLS.md`](./docs/01-PITFALLS.md) | Every bug-prone area — Rufen lessons + ElevenLabs/Telnyx/MCP specifics — phrased as *watch-out-because-do*. | When something silently breaks (it will). |
-| [`02-PITCH.md`](./docs/02-PITCH.md) | First sentence, wedge, 7-slide deck, rubric self-score, **evidence plan**, solo handling, the 3-minute script. **55% of your score lives here.** | Tonight + the last 90 min before pitching. |
-| [`03-PREFLIGHT.md`](./docs/03-PREFLIGHT.md) | Do-these-before-Saturday checklist: accounts, Telnyx Level-2 verification, ngrok, hotspot, backup video. | **Tonight.** Some items have approval lag. |
+## Locked decisions
 
-## The five decisions already locked
+1. **Build fresh** (hackathon integrity) — reuse Rufen *patterns/knowledge* only, never its code.
+2. **Backend = Django 5 + DRF + Channels + Daphne**, Postgres + Redis.
+3. **Engine = Temporal** — durable campaign workflows: concurrency + delay/max-attempt retry.
+4. **Voice = ElevenLabs Agents** (in-call LLM `claude-haiku-4-5`) over a **Telnyx SIP trunk** (`+4934156154530`).
+5. **Orchestration LLM = Claude/GPT** (script + extraction generation) — `ORCHESTRATOR_PROVIDER`.
+6. **Excel = fixed schema** `name, phone, context, language` (template: `examples/contacts_example.csv`).
+7. **Auth + billing mocked.** Concurrency capped at the account max (2 Free / 5 Creator).
+8. **Docker Compose:** `db · redis · temporal · temporal-ui · web · temporal-worker`.
 
-1. **Voice = ElevenLabs Agents** (managed STT→LLM→TTS+tools+voice). No Asterisk, no Qwen worker, no media bridge.
-2. **Telephony = Telnyx SIP trunk** → ElevenLabs. **One number is enough** for parallel calls.
-3. **Backend = Django + Channels only.** No Temporal, no Langfuse. Parallel = asyncio background tasks.
-4. **Auth + billing = mocked** (clean screens, no Stripe, no real metering).
-5. **Frontend = React 19 + Vite + Tailwind 4 + shadcn**, built **fresh today** (not copied from Rufen — see integrity note in `02-PITCH.md`).
-6. **Docker Compose** for the stack: `db` (Postgres 16) · `redis` · `web` (Django/Daphne) · `frontend` (Vite). MCP server + ngrok run on the host. See `00-DESIGN.md` §16.
+## Open items
 
-## Still need from you (answer in chat)
-
-- [ ] Your **logo files** (path on disk) — name is set to **Rufen AI**.
-- [ ] **ElevenLabs** account + API key ready? Which plan (concurrency tier)?
-- [ ] **Telnyx** account ready + **Level-2 verification started**? (concurrency cap — see preflight)
-- [ ] **Claude Desktop** installed on your demo machine (for the MCP demo)?
+- [ ] Finish **Telnyx SIP → ElevenLabs import** → set `ELEVEN_AGENT_PHONE_NUMBER_ID` (the one pending blocker).
+- [ ] Put your + teammate's **real phone numbers** in `examples/contacts_example.csv`.
+- [ ] Your **logo files** for the UI.
