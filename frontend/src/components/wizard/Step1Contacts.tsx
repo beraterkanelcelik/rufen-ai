@@ -1,20 +1,33 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { parseContacts } from "../../api";
 import { Pill } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { SAMPLE_CONTACTS, SAMPLE_FILE_NAME } from "./sampleContacts";
 import type { StepProps } from "./types";
 
 export function Step1Contacts({ draft, update }: StepProps) {
   const [dragging, setDragging] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Mock "load": ignore whatever the user actually drops/picks and load the
-  // canned BMW sample so the demo is deterministic.
-  function loadSample() {
-    update({ contacts: SAMPLE_CONTACTS, fileName: SAMPLE_FILE_NAME });
+  // Real upload: send the file to the backend importer, get valid/invalid rows.
+  async function handleFile(file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await parseContacts(file);
+      update({ contacts: res.contacts, fileName: res.fileName });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   function clearFile() {
     update({ contacts: [], fileName: null });
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   const valid = draft.contacts.filter((c) => c.valid).length;
@@ -35,34 +48,52 @@ export function Step1Contacts({ draft, update }: StepProps) {
       </div>
 
       {!hasFile ? (
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            loadSample();
-          }}
-          onClick={loadSample}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-6 py-14 text-center transition-colors ${
-            dragging
-              ? "border-[#F97316] bg-[#F97316]/5"
-              : "border-[#212121] hover:border-[#F97316]/50 hover:bg-white/[0.02]"
-          }`}
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-2xl">
-            ⬆
+        <div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".csv,.xlsx"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+            }}
+          />
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFile(f);
+            }}
+            onClick={() => inputRef.current?.click()}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-6 py-14 text-center transition-colors ${
+              dragging
+                ? "border-[#F97316] bg-[#F97316]/5"
+                : "border-[#212121] hover:border-[#F97316]/50 hover:bg-white/[0.02]"
+            }`}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-2xl">
+              ⬆
+            </div>
+            <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
+              {busy ? "Parsing…" : (
+                <>
+                  Drop your <span className="text-white">.xlsx</span> or{" "}
+                  <span className="text-white">.csv</span> here
+                </>
+              )}
+            </p>
+            <p className="mt-1 text-xs text-[#8a8a8a]">
+              or click to choose a file (columns: name, phone, context, language)
+            </p>
           </div>
-          <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
-            Drop your <span className="text-white">.xlsx</span> or{" "}
-            <span className="text-white">.csv</span> here
-          </p>
-          <p className="mt-1 text-xs text-[#8a8a8a]">
-            or click to load a sample BMW recall list
-          </p>
+          {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
         </div>
       ) : (
         <div className="space-y-4">

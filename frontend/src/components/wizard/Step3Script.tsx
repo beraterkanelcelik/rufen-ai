@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { generateScript } from "../../api";
 import type { ExtractionField } from "../../types";
 import { Button } from "../ui/Button";
 import { Field, Select, TextArea, TextInput } from "./fields";
-import type { StepProps, WizardDraft } from "./types";
+import type { StepProps } from "./types";
 
 const FIELD_TYPES: ExtractionField["type"][] = [
   "string",
@@ -11,88 +12,28 @@ const FIELD_TYPES: ExtractionField["type"][] = [
   "date",
 ];
 
-// Mock "LLM" generation — derives a plausible script from the goal/reason.
-// Two canned variants so Regenerate visibly changes the output.
-function mockGenerate(draft: WizardDraft, variant: number): Partial<WizardDraft> {
-  const company =
-    draft.name?.split(/\s+/)[0] || "our team";
-  const goal = draft.goal.trim() || "complete the requested action";
-  const reason = draft.reason.trim() || "an important update";
-
-  const prompts = [
-    `You are an AI assistant calling on behalf of ${company}. Politely greet {name} and explain the reason for your call: ${reason}. Your objective is to ${goal.toLowerCase()}. Reference the customer's details ({context}) where relevant. Keep the call under 90 seconds, be warm and concise, and clearly identify yourself as an AI assistant. If the person is busy, offer to call back.`,
-    `You are a friendly AI voice assistant from ${company}. Clearly state that you are an AI assistant. Address {name} by name and bring up their specific situation ({context}). Reason for the call: ${reason}. Goal: ${goal.toLowerCase()}. Be respectful of their time, confirm next steps before ending, and never pressure the customer.`,
-  ];
-
-  const firsts = [
-    `Hello, this is the ${company} AI assistant calling about ${reason.toLowerCase()}. Is now a good time to talk?`,
-    `Hi {name}, this is an AI assistant from ${company} — I'm reaching out regarding ${reason.toLowerCase()}. Do you have a quick moment?`,
-  ];
-
-  const schemas: ExtractionField[][] = [
-    [
-      {
-        key: "agreed",
-        type: "boolean",
-        desc: "Did the customer agree to the requested action?",
-      },
-      {
-        key: "preferred_date",
-        type: "string",
-        desc: "Any preferred date or time the customer mentioned.",
-      },
-      {
-        key: "callback_needed",
-        type: "boolean",
-        desc: "Does the customer want a human to call them back?",
-      },
-    ],
-    [
-      {
-        key: "outcome_summary",
-        type: "string",
-        desc: "One-line summary of how the call went.",
-      },
-      {
-        key: "agreed",
-        type: "boolean",
-        desc: "Did the customer commit to the goal?",
-      },
-      {
-        key: "objection",
-        type: "string",
-        desc: "Main objection or concern raised, if any.",
-      },
-      {
-        key: "callback_needed",
-        type: "boolean",
-        desc: "Wants a human follow-up call?",
-      },
-    ],
-  ];
-
-  const i = variant % 2;
-  return {
-    generated: true,
-    script_prompt: prompts[i],
-    first_message: firsts[i],
-    extraction_schema: schemas[i],
-  };
-}
-
 export function Step3Script({ draft, update }: StepProps) {
-  const [variant, setVariant] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function generate() {
+  // Real AI generation via the backend orchestration LLM (Claude/GPT).
+  async function generate() {
     setBusy(true);
-    const v = draft.generated ? variant + 1 : variant;
-    // Tiny delay so the button shows a working state (mock "thinking").
-    setTimeout(() => {
-      update(mockGenerate(draft, v));
-      setVariant(v);
+    setError(null);
+    try {
+      const fields = ["name", "context"];
+      const out = await generateScript(draft.goal, draft.reason, fields);
+      update({
+        generated: true,
+        script_prompt: out.script_prompt,
+        first_message: out.first_message,
+        extraction_schema: out.extraction_schema,
+      });
+    } catch (e) {
+      setError(String(e));
+    } finally {
       setBusy(false);
-    }, 650);
+    }
   }
 
   function patchField(idx: number, patch: Partial<ExtractionField>) {
@@ -150,6 +91,7 @@ export function Step3Script({ draft, update }: StepProps) {
           <Button className="mt-5" onClick={generate} disabled={busy}>
             {busy ? "Generating…" : "✦ Generate with AI"}
           </Button>
+          {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
         </div>
       ) : (
         <div className="space-y-5">

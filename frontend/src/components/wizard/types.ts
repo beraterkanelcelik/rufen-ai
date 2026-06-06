@@ -5,7 +5,7 @@ import type {
   Language,
 } from "../../types";
 
-/** A row parsed from the (mock) uploaded contacts file. */
+/** A row parsed from the uploaded contacts file. */
 export interface DraftContact {
   name: string;
   phone: string;
@@ -35,6 +35,7 @@ export interface WizardDraft {
 
   // Step 4 — voice & language
   voice_id: string;
+  voice_name?: string; // friendly name of the picked voice (for review)
   language: Language;
 
   // Step 5 — run settings

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Card, CardBody } from "../ui/Card";
 import { Pill } from "../ui/Badge";
-import { VOICES } from "./Step4Voice";
 import type { StepProps } from "./types";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -15,7 +14,9 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 export function Step6Review({ draft }: StepProps) {
   const validContacts = draft.contacts.filter((c) => c.valid).length;
-  const voice = VOICES.find((v) => v.id === draft.voice_id);
+  const voice = draft.voice_id
+    ? { name: draft.voice_name || draft.voice_id }
+    : null;
 
   return (
     <div className="space-y-5">
@@ -47,14 +48,7 @@ export function Step6Review({ draft }: StepProps) {
             </span>
           </Row>
           <Row label="Voice">
-            {voice ? (
-              <span>
-                {voice.name}{" "}
-                <span className="text-[#8a8a8a]">· {voice.accent}</span>
-              </span>
-            ) : (
-              "—"
-            )}
+            {voice ? <span>{voice.name}</span> : "—"}
           </Row>
           <Row label="Language">{draft.language.toUpperCase()}</Row>
           <Row label="Run">

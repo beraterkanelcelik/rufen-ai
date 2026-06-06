@@ -1,39 +1,42 @@
+import { useEffect, useState } from "react";
+import { fetchVoices, type Voice } from "../../api";
 import type { Language } from "../../types";
 import { Field, Select } from "./fields";
 import type { StepProps } from "./types";
 
-interface Voice {
-  id: string;
-  name: string;
-  desc: string;
-  accent: string;
-}
-
-export const VOICES: Voice[] = [
-  { id: "voice_rachel", name: "Rachel", desc: "Warm, professional female", accent: "US English" },
-  { id: "voice_adam", name: "Adam", desc: "Calm, confident male", accent: "US English" },
-  { id: "voice_bella", name: "Bella", desc: "Friendly, upbeat female", accent: "UK English" },
-  { id: "voice_lukas", name: "Lukas", desc: "Clear, neutral male", accent: "German" },
-];
-
 export function Step4Voice({ draft, update }: StepProps) {
+  const [voices, setVoices] = useState<Voice[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchVoices()
+      .then(setVoices)
+      .catch((e) => setError(String(e)));
+  }, []);
+
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Voice &amp; language</h2>
         <p className="mt-1 text-sm text-[#8a8a8a]">
-          Pick the voice your agent uses on every call.
+          Pick the voice your agent uses on every call. These are your live
+          ElevenLabs voices.
         </p>
       </div>
 
+      {error && <p className="text-xs text-red-400">Could not load voices: {error}</p>}
+      {voices === null && !error && (
+        <p className="text-sm text-[#8a8a8a]">Loading voices…</p>
+      )}
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {VOICES.map((v) => {
+        {(voices ?? []).map((v) => {
           const selected = draft.voice_id === v.id;
           return (
             <button
               key={v.id}
               type="button"
-              onClick={() => update({ voice_id: v.id })}
+              onClick={() => update({ voice_id: v.id, voice_name: v.name })}
               className={`flex items-center gap-3 rounded-[8px] border p-3 text-left transition-all ${
                 selected
                   ? "border-[#F97316]/60 bg-[#F97316]/[0.06] shadow-[0_0_24px_-10px_rgba(249,115,22,0.6)]"
@@ -41,9 +44,12 @@ export function Step4Voice({ draft, update }: StepProps) {
               }`}
             >
               <span
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (v.preview_url) new Audio(v.preview_url).play().catch(() => {});
+                }}
+                title={v.preview_url ? "Play preview" : "No preview available"}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]"
-                aria-hidden
               >
                 ▶
               </span>

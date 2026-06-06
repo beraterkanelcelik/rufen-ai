@@ -47,6 +47,56 @@ export const createCampaign = (body: CreateCampaignBody) =>
 export const launchCampaign = (id: string) =>
   http<Campaign>(`/campaigns/${id}/launch`, { method: "POST" });
 
+// ── Wizard support: real AI generation, real voices, real file parsing ──────
+export interface GeneratedScript {
+  script_prompt: string;
+  first_message: string;
+  extraction_schema: Campaign["extraction_schema"];
+}
+
+export const generateScript = (goal: string, reason: string, fields: string[]) =>
+  http<GeneratedScript>("/generate", {
+    method: "POST",
+    body: JSON.stringify({ goal, reason, fields }),
+  });
+
+export interface Voice {
+  id: string;
+  name: string;
+  accent: string;
+  desc: string;
+  preview_url: string | null;
+}
+
+export const fetchVoices = () => http<Voice[]>("/voices");
+
+export interface ParsedContact {
+  name: string;
+  phone: string;
+  context: string;
+  language: "en" | "de";
+  valid: boolean;
+  error?: string;
+}
+
+export interface ParseResult {
+  fileName: string;
+  contacts: ParsedContact[];
+  valid: number;
+  invalid: number;
+}
+
+export async function parseContacts(file: File): Promise<ParseResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/contacts/parse`, {
+    method: "POST",
+    body: form, // let the browser set the multipart boundary
+  });
+  if (!res.ok) throw new Error(`POST /contacts/parse → ${res.status}`);
+  return (await res.json()) as ParseResult;
+}
+
 /** Open the live monitor WebSocket. Same signature as the old mock so pages
  *  swap import only. Returns an unsubscribe fn. */
 export function subscribeLive(

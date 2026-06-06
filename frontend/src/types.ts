@@ -1,4 +1,4 @@
-// Core domain types for Rufen Campaign (mock frontend).
+// Core domain types for Rufen Campaign frontend.
 // Mirrors docs/00-DESIGN.md section 4.
 
 export type CampaignStatus =
