@@ -1,0 +1,27 @@
+# Internal strategy — keep local, not in the public submission repo
+02-PITCH.md
+
+# Secrets / env
+.env
+.env.*
+*.local
+.dev.vars
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
