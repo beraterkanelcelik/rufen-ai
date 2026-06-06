@@ -29,18 +29,33 @@ class CampaignMonitorConsumer(AsyncWebsocketConsumer):
         self._redis = Redis.from_url(os.environ["REDIS_URL"])
         self._pubsub = self._redis.pubsub()
         await self._pubsub.subscribe(f"campaign:{self.campaign_id}")
-        self._task = None
         import asyncio
         self._task = asyncio.create_task(self._reader())
+        # heartbeat: keep the socket non-idle so Daphne's keepalive-ping timeout
+        # never closes a quiet call (e.g. while ringing / between transcript
+        # turns). The client ignores unknown frame types.
+        self._hb = asyncio.create_task(self._heartbeat())
 
         # initial snapshot so a late joiner sees current state + counters
         for frame in await self._snapshot():
             await self.send(text_data=json.dumps(frame))
 
+    async def _heartbeat(self):
+        import asyncio
+        try:
+            while True:
+                await asyncio.sleep(15)
+                await self.send(text_data=json.dumps({"type": "ping"}))
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            pass
+
     async def disconnect(self, code):
-        task = getattr(self, "_task", None)
-        if task:
-            task.cancel()
+        for attr in ("_task", "_hb"):
+            t = getattr(self, attr, None)
+            if t:
+                t.cancel()
         pubsub = getattr(self, "_pubsub", None)
         if pubsub:
             try:
