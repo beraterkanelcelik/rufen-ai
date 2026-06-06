@@ -50,6 +50,11 @@ export const launchCampaign = (id: string) =>
 /** Direct URL for the sanitized server-side CSV export (open in a new tab). */
 export const campaignExportUrl = (id: string) => `${API_BASE}/campaigns/${id}/export`;
 
+export async function deleteCampaign(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/campaigns/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`DELETE /campaigns/${id} → ${res.status}`);
+}
+
 // ── Wizard support: real AI generation, real voices, real file parsing ──────
 export interface GeneratedScript {
   script_prompt: string;

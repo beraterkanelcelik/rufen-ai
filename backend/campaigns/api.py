@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from temporalio.client import Client
 
-from .eleven import create_agent, get_conversation, list_voices, start_call
+from .eleven import create_agent, delete_agent, get_conversation, list_voices, start_call
 from .export import build_csv
 from .generator import generate_script
 from .importer import parse_contacts
@@ -47,9 +47,18 @@ def campaigns_collection(request):
     return Response(CampaignSerializer(qs, many=True).data)
 
 
-@api_view(["GET", "PATCH"])
+@api_view(["GET", "PATCH", "DELETE"])
 def campaign_detail(request, pk):
     campaign = get_object_or_404(Campaign, pk=pk)
+    if request.method == "DELETE":
+        # best-effort: also remove this campaign's ElevenLabs agents
+        for aid in (campaign.eleven_agent_ids or []):
+            try:
+                delete_agent(aid)
+            except Exception:
+                pass
+        campaign.delete()  # cascades to contacts + call attempts
+        return Response(status=status.HTTP_204_NO_CONTENT)
     if request.method == "PATCH":
         # NOTE: auth is mocked for this hackathon (locked decision) — no users/
         # tenancy to scope against. `status` is intentionally NOT editable here:

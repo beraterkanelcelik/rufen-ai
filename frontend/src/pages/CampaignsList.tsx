@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchCampaigns } from "../api";
+import { deleteCampaign, fetchCampaigns } from "../api";
 import { Card, CardBody, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { CampaignStatusBadge, Pill } from "../components/ui/Badge";
@@ -17,12 +17,30 @@ export default function CampaignsList() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCampaigns()
       .then(setCampaigns)
       .catch((e) => setError(String(e)));
   }, []);
+
+  async function handleDelete(e: React.MouseEvent, c: Campaign) {
+    e.preventDefault(); // don't navigate into the card
+    e.stopPropagation();
+    if (!window.confirm(`Delete campaign "${c.name}"? This removes its contacts and results.`)) {
+      return;
+    }
+    setDeleting(c.id);
+    try {
+      await deleteCampaign(c.id);
+      setCampaigns((prev) => (prev ? prev.filter((x) => x.id !== c.id) : prev));
+    } catch (err) {
+      window.alert(`Could not delete: ${err}`);
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   if (error) {
     return (
@@ -76,7 +94,19 @@ export default function CampaignsList() {
                       <h2 className="font-semibold leading-snug text-white">
                         {c.name}
                       </h2>
-                      <CampaignStatusBadge status={c.status} />
+                      <div className="flex shrink-0 items-center gap-2">
+                        <CampaignStatusBadge status={c.status} />
+                        <button
+                          type="button"
+                          aria-label="Delete campaign"
+                          title="Delete campaign"
+                          disabled={deleting === c.id}
+                          onClick={(e) => handleDelete(e, c)}
+                          className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#8a8a8a] transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                        >
+                          {deleting === c.id ? "…" : "🗑"}
+                        </button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardBody>
