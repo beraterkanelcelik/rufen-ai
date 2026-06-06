@@ -27,3 +27,11 @@ dist/
 .idea/
 .vscode/
 .venv-test/
+
+# Playwright
+.playwright-mcp/
+monitor-live.png
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/
+test-results/

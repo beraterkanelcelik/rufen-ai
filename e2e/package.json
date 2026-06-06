@@ -1,0 +1,13 @@
+{
+  "name": "rufen-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Browser end-to-end tests for Rufen Campaign (Playwright)",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}
