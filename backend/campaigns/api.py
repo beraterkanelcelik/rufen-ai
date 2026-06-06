@@ -52,6 +52,9 @@ def campaigns_collection(request):
 def campaign_detail(request, pk):
     campaign = get_object_or_404(Campaign, pk=pk)
     if request.method == "DELETE":
+        # stop the running workflow FIRST so no further calls are placed and no
+        # activity tries to write back to rows we're about to delete.
+        _terminate_campaign_workflow(campaign.id)
         # best-effort: also remove this campaign's ElevenLabs agents
         for aid in (campaign.eleven_agent_ids or []):
             try:
@@ -108,6 +111,24 @@ def _ensure_agents(campaign):
     campaign.eleven_agent_id = agent_ids[0]
     campaign.save(update_fields=["eleven_agent_ids", "eleven_agent_id"])
     return agent_ids
+
+
+def _terminate_campaign_workflow(campaign_id):
+    """Best-effort: terminate the campaign's Temporal workflow (id=campaign-{id})
+    and its children so deleting the campaign also stops any in-flight calls.
+    Swallows everything — a missing/already-finished workflow is fine."""
+    async def _run():
+        client = await Client.connect(
+            os.environ.get("TEMPORAL_HOST", "temporal:7233"),
+            namespace=os.environ.get("TEMPORAL_NAMESPACE", "rufen"),
+        )
+        handle = client.get_workflow_handle(f"campaign-{campaign_id}")
+        await handle.terminate("campaign deleted")
+
+    try:
+        async_to_sync(_run)()
+    except Exception:
+        pass
 
 
 def _start_campaign_workflow(campaign, contact_ids, agent_ids):
