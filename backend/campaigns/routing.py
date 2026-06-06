@@ -1,7 +1,8 @@
-"""WebSocket routes for the live campaign monitor.
+"""WebSocket routes for the live campaign monitor."""
+from django.urls import re_path
 
-The ``CampaignMonitorConsumer`` is added in Slice 3; until then this list is
-empty so ASGI boots without a consumer wired up.
-"""
+from .consumers import CampaignMonitorConsumer
 
-websocket_urlpatterns = []
+websocket_urlpatterns = [
+    re_path(r"ws/campaign/(?P<campaign_id>\d+)/$", CampaignMonitorConsumer.as_asgi()),
+]

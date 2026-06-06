@@ -5,7 +5,7 @@ The DRF campaign API (Slice 4) and the bare monitor page (Slice 3) are added
 to their own includes when those slices land.
 """
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 
 
 def health(_request):
@@ -14,4 +14,5 @@ def health(_request):
 
 urlpatterns = [
     path("health/", health, name="health"),
+    path("api/", include("campaigns.api")),
 ]
