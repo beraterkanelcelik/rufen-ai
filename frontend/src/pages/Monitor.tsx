@@ -188,9 +188,12 @@ export default function Monitor() {
       }
     };
 
-    const unsubscribe = subscribeLive(campaign.id, handle);
+    const unsubscribe = subscribeLive(campaign.id, handle, (connected) => {
+      // reflect the REAL socket state; once the campaign stops we stay offline.
+      setLive(connected && campaign.status === "running");
+    });
     return () => unsubscribe();
-  }, [campaign]);
+  }, [campaign?.id, campaign?.status]);
 
   // Safety net: poll the backend so the final transcript / result / status always
   // reflect even if a live WS frame is missed — no manual refresh needed.

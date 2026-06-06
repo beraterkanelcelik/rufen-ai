@@ -148,18 +148,53 @@ export async function parseContacts(file: File): Promise<ParseResult> {
 export function subscribeLive(
   campaignId: string,
   onEvent: (e: LiveEvent) => void,
+  onStatus?: (connected: boolean) => void,
 ): () => void {
-  const ws = new WebSocket(`${WS_BASE}/ws/campaign/${campaignId}/?token=mock`);
-  ws.onmessage = (ev) => {
-    try {
-      onEvent(JSON.parse(ev.data) as LiveEvent);
-    } catch {
-      /* ignore malformed frame */
-    }
+  let ws: WebSocket | null = null;
+  let stopped = false;
+  let attempt = 0;
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const connect = () => {
+    ws = new WebSocket(`${WS_BASE}/ws/campaign/${campaignId}/?token=mock`);
+    ws.onopen = () => {
+      attempt = 0;
+      onStatus?.(true);
+    };
+    ws.onmessage = (ev) => {
+      try {
+        onEvent(JSON.parse(ev.data) as LiveEvent);
+      } catch {
+        /* ignore malformed frame */
+      }
+    };
+    ws.onclose = () => {
+      onStatus?.(false);
+      if (stopped) return;
+      // auto-reconnect with backoff (0.5s → cap 5s) so a network/idle blip
+      // never leaves the monitor dead.
+      attempt += 1;
+      const delay = Math.min(5000, 500 * 2 ** Math.min(attempt, 4));
+      reconnectTimer = setTimeout(() => {
+        if (!stopped) connect();
+      }, delay);
+    };
+    ws.onerror = () => {
+      try {
+        ws?.close();
+      } catch {
+        /* will trigger onclose → reconnect */
+      }
+    };
   };
+
+  connect();
+
   return () => {
+    stopped = true;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
     try {
-      ws.close();
+      ws?.close();
     } catch {
       /* already closed */
     }
