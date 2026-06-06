@@ -42,67 +42,68 @@ class ContactCallWorkflow:
         contact_id: int,
         campaign_id: int,
         agent_id: str,
+        attempt: int,
         retry_on: list,
         retry_delay_minutes: int,
         max_attempts: int,
     ) -> dict:
-        attempt = 0
-        while True:
-            attempt += 1
-            try:
-                res = await workflow.execute_activity(
-                    place_call_activity,
-                    args=[contact_id, campaign_id, attempt, agent_id],
-                    # must exceed MAX_CALL_SECONDS (600s) so Temporal never kills a
-                    # genuinely long call while it's still polling the transcript.
-                    start_to_close_timeout=timedelta(minutes=11),
-                    # NO Temporal auto-retry: re-running this activity would place a
-                    # SECOND real call. A failed dial is caught below and handled by
-                    # the outcome-level retry (a fresh, delayed attempt) instead.
-                    retry_policy=RetryPolicy(maximum_attempts=1),
-                )
-            except ActivityError:
-                # Dial failed (e.g. telephony not configured yet) — treat as a
-                # failed outcome so the contact still finalizes instead of hanging.
-                res = {"conversation_id": "", "outcome": "failed",
-                       "transcript": [], "result": {}}
-            outcome = res["outcome"]
+        """ONE call attempt. The parent owns the retry delay so the concurrency
+        slot (agent) is freed while a contact waits to be retried — a no-answer no
+        longer blocks the rest of the campaign. Returns ``retry=True`` to ask the
+        parent to wait then re-run; otherwise the contact is terminal."""
+        try:
+            res = await workflow.execute_activity(
+                place_call_activity,
+                args=[contact_id, campaign_id, attempt, agent_id],
+                # must exceed MAX_CALL_SECONDS (600s) so Temporal never kills a
+                # genuinely long call while it's still polling the transcript.
+                start_to_close_timeout=timedelta(minutes=11),
+                # NO Temporal auto-retry: re-running this activity would place a
+                # SECOND real call. A failed dial is caught below and handled by
+                # the outcome-level retry (a fresh, delayed attempt) instead.
+                retry_policy=RetryPolicy(maximum_attempts=1),
+            )
+        except ActivityError:
+            # Dial failed (e.g. telephony not configured yet) — treat as a
+            # failed outcome so the contact still finalizes instead of hanging.
+            res = {"conversation_id": "", "outcome": "failed",
+                   "transcript": [], "result": {}}
+        outcome = res["outcome"]
+        res["attempts"] = attempt
 
-            if should_retry(outcome, attempt, retry_on, max_attempts):
-                retry_seconds = retry_delay_minutes * 60
-                await workflow.execute_activity(
-                    update_contact_status_activity,
-                    args=[contact_id, campaign_id, "retry_wait", attempt, outcome,
-                          None, retry_seconds],
-                    start_to_close_timeout=timedelta(seconds=30),
-                )
-                # durable timer: inside a workflow Temporal patches asyncio.sleep
-                # into a deterministic timer (there is no workflow.sleep in the SDK).
-                await asyncio.sleep(retry_delay_minutes * 60)
-                continue
-
-            status = terminal_status(outcome, attempt, retry_on, max_attempts)
+        if should_retry(outcome, attempt, retry_on, max_attempts):
+            retry_seconds = retry_delay_minutes * 60
             await workflow.execute_activity(
                 update_contact_status_activity,
-                args=[contact_id, campaign_id, status, attempt, outcome,
-                      res.get("result") or {}, None],
+                args=[contact_id, campaign_id, "retry_wait", attempt, outcome,
+                      None, retry_seconds],
                 start_to_close_timeout=timedelta(seconds=30),
             )
-            # confirmation SMS on a successful (answered) call — best-effort
-            if status == "completed":
-                try:
-                    await workflow.execute_activity(
-                        send_confirmation_sms_activity,
-                        args=[contact_id, campaign_id],
-                        start_to_close_timeout=timedelta(seconds=30),
-                        retry_policy=RetryPolicy(maximum_attempts=1),
-                    )
-                except Exception:
-                    pass  # SMS failure must never affect the call outcome
-
-            res["attempts"] = attempt
-            res["status"] = status
+            res["retry"] = True
             return res
+
+        status = terminal_status(outcome, attempt, retry_on, max_attempts)
+        await workflow.execute_activity(
+            update_contact_status_activity,
+            args=[contact_id, campaign_id, status, attempt, outcome,
+                  res.get("result") or {}, None],
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+        # confirmation SMS on a successful (answered) call — best-effort
+        if status == "completed":
+            try:
+                await workflow.execute_activity(
+                    send_confirmation_sms_activity,
+                    args=[contact_id, campaign_id],
+                    start_to_close_timeout=timedelta(seconds=30),
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                )
+            except Exception:
+                pass  # SMS failure must never affect the call outcome
+
+        res["retry"] = False
+        res["status"] = status
+        return res
 
 
 @workflow.defn
@@ -124,18 +125,38 @@ class CampaignWorkflow:
     ) -> dict:
         concurrency = max(1, int(concurrency))
         pool = agent_ids or [""]  # one agent per concurrency slot (ElevenLabs: 1 call/agent)
-        # Concurrency cap via batching (deterministic, SDK-version-agnostic).
-        for i in range(0, len(contact_ids), concurrency):
-            batch = contact_ids[i:i + concurrency]
-            await asyncio.gather(*[
-                workflow.execute_child_workflow(
-                    ContactCallWorkflow.run,
-                    args=[cid, campaign_id, pool[j % len(pool)],
-                          retry_on, retry_delay_minutes, max_attempts],
-                    id=f"contact-{campaign_id}-{cid}",
-                )
-                for j, cid in enumerate(batch)
-            ], return_exceptions=True)
+
+        # Rolling concurrency (NOT fixed batches): an agent queue doubles as the
+        # concurrency limiter and the per-call agent allocator. A contact grabs a
+        # free agent, runs its whole call lifecycle, then returns the agent so the
+        # next waiting contact starts IMMEDIATELY — one slow/retrying call no longer
+        # blocks everyone behind it (the old batch-barrier bug).
+        agents: asyncio.Queue = asyncio.Queue()
+        for a in pool:
+            agents.put_nowait(a)
+
+        async def run_contact(cid):
+            attempt = 0
+            while True:
+                attempt += 1
+                agent = await agents.get()  # blocks until a slot/agent is free
+                try:
+                    res = await workflow.execute_child_workflow(
+                        ContactCallWorkflow.run,
+                        args=[cid, campaign_id, agent, attempt,
+                              retry_on, retry_delay_minutes, max_attempts],
+                        id=f"contact-{campaign_id}-{cid}-{attempt}",
+                    )
+                finally:
+                    agents.put_nowait(agent)  # free the slot BEFORE any retry wait
+                if not (res or {}).get("retry"):
+                    break
+                # wait out the retry delay WITHOUT holding an agent, so other
+                # contacts keep dialing (durable timer via patched asyncio.sleep).
+                await asyncio.sleep(retry_delay_minutes * 60)
+
+        await asyncio.gather(*[run_contact(cid) for cid in contact_ids],
+                             return_exceptions=True)
 
         await workflow.execute_activity(
             finalize_campaign_activity,

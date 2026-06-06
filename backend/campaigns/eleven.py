@@ -63,7 +63,11 @@ async def start_call(agent_id, to_number, dynamic_variables):
         "to_number": to_number,
         "conversation_initiation_client_data": {"dynamic_variables": dynamic_variables},
     }
-    async with httpx.AsyncClient(timeout=30) as c:
+    # generous read timeout: placing the call (esp. international destinations)
+    # can take >30s to return the conversation_id, and a premature ReadTimeout
+    # marks a real call as failed.
+    timeout = httpx.Timeout(connect=10.0, read=90.0, write=10.0, pool=10.0)
+    async with httpx.AsyncClient(timeout=timeout) as c:
         r = await c.post(f"{BASE}/convai/sip-trunk/outbound-call", json=body, headers=_h())
         r.raise_for_status()
         return r.json()
