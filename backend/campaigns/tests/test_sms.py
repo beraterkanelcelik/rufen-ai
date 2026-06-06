@@ -4,7 +4,8 @@ from campaigns.sms import compose_confirmation, find_plate, looks_booked
 
 
 def _contact(**kw):
-    base = dict(name="Berat Elcelik", phone="+490000000000", context="", result={})
+    # synthetic fixture data only — no real names/numbers (public repo)
+    base = dict(name="Test Customer", phone="+490000000000", context="", result={})
     base.update(kw)
     # find_plate reads contact.call_attempts only via the model; not used here
     return SimpleNamespace(**base)
