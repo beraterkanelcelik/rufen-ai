@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Pill } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { SAMPLE_CONTACTS, SAMPLE_FILE_NAME } from "./sampleContacts";
@@ -6,7 +6,6 @@ import type { StepProps } from "./types";
 
 export function Step1Contacts({ draft, update }: StepProps) {
   const [dragging, setDragging] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Mock "load": ignore whatever the user actually drops/picks and load the
   // canned BMW sample so the demo is deterministic.
@@ -47,20 +46,13 @@ export function Step1Contacts({ draft, update }: StepProps) {
             setDragging(false);
             loadSample();
           }}
-          onClick={() => inputRef.current?.click()}
+          onClick={loadSample}
           className={`flex cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-6 py-14 text-center transition-colors ${
             dragging
               ? "border-[#F97316] bg-[#F97316]/5"
               : "border-[#212121] hover:border-[#F97316]/50 hover:bg-white/[0.02]"
           }`}
         >
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".csv,.xlsx"
-            className="hidden"
-            onChange={() => loadSample()}
-          />
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-2xl">
             ⬆
           </div>
@@ -69,7 +61,7 @@ export function Step1Contacts({ draft, update }: StepProps) {
             <span className="text-white">.csv</span> here
           </p>
           <p className="mt-1 text-xs text-[#8a8a8a]">
-            or click to browse — we'll load a sample BMW recall list
+            or click to load a sample BMW recall list
           </p>
         </div>
       ) : (
