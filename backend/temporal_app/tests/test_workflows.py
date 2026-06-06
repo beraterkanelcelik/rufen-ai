@@ -130,3 +130,43 @@ async def test_workflow_no_retry_on_answered_first_try():
     assert calls == [1]
     assert res["status"] == "completed"
     assert not any(u["status"] == "retry_wait" for u in updates)
+
+
+@integration
+@pytest.mark.asyncio
+async def test_campaign_workflow_fans_out_and_finalizes():
+    from temporal_app.workflows import CampaignWorkflow
+
+    placed, finalized = [], []
+
+    @activity.defn(name="place_call_activity")
+    async def fake_place(contact_id: int, campaign_id: int, attempt_no: int) -> dict:
+        placed.append(contact_id)
+        return {"conversation_id": "c", "outcome": "answered", "transcript": [], "result": {}}
+
+    @activity.defn(name="update_contact_status_activity")
+    async def fake_update(contact_id: int, campaign_id: int, status: str, attempts: int,
+                          last_outcome: str, result: dict = None, retry_seconds: int = None) -> None:
+        pass
+
+    @activity.defn(name="finalize_campaign_activity")
+    async def fake_finalize(campaign_id: int) -> None:
+        finalized.append(campaign_id)
+
+    try:
+        env_cm = await asyncio.wait_for(WorkflowEnvironment.start_time_skipping(), timeout=30)
+    except Exception as exc:
+        pytest.skip(f"Temporal time-skipping server unavailable: {exc}")
+
+    async with env_cm as env:
+        async with Worker(env.client, task_queue="test-q",
+                          workflows=[CampaignWorkflow, ContactCallWorkflow],
+                          activities=[fake_place, fake_update, fake_finalize]):
+            res = await env.client.execute_workflow(
+                CampaignWorkflow.run,
+                args=[1, [10, 11], 2, RETRY_ON, 60, 3],
+                id="campaign-test-1", task_queue="test-q",
+            )
+    assert res["contacts"] == 2
+    assert sorted(placed) == [10, 11]
+    assert finalized == [1]

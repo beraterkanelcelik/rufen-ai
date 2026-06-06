@@ -15,8 +15,12 @@ django.setup()  # must run before importing anything that touches models
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from temporal_app.activities import place_call_activity, update_contact_status_activity
-from temporal_app.workflows import ContactCallWorkflow
+from temporal_app.activities import (
+    finalize_campaign_activity,
+    place_call_activity,
+    update_contact_status_activity,
+)
+from temporal_app.workflows import CampaignWorkflow, ContactCallWorkflow
 
 TASK_QUEUE = "campaigns"
 
@@ -41,8 +45,12 @@ async def main():
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[ContactCallWorkflow],
-        activities=[place_call_activity, update_contact_status_activity],
+        workflows=[ContactCallWorkflow, CampaignWorkflow],
+        activities=[
+            place_call_activity,
+            update_contact_status_activity,
+            finalize_campaign_activity,
+        ],
     )
     await worker.run()
 

@@ -1,12 +1,15 @@
 """Temporal workflows — orchestration only. Deterministic: no clock/random/IO
 here; the retry delay is a durable ``workflow.sleep`` timer, not time.sleep."""
+import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
     from temporal_app.activities import (
+        finalize_campaign_activity,
         place_call_activity,
         update_contact_status_activity,
     )
@@ -44,12 +47,18 @@ class ContactCallWorkflow:
         attempt = 0
         while True:
             attempt += 1
-            res = await workflow.execute_activity(
-                place_call_activity,
-                args=[contact_id, campaign_id, attempt],
-                start_to_close_timeout=timedelta(minutes=5),
-                retry_policy=RetryPolicy(maximum_attempts=2),  # transient API errors only
-            )
+            try:
+                res = await workflow.execute_activity(
+                    place_call_activity,
+                    args=[contact_id, campaign_id, attempt],
+                    start_to_close_timeout=timedelta(minutes=5),
+                    retry_policy=RetryPolicy(maximum_attempts=2),  # transient API errors only
+                )
+            except ActivityError:
+                # Dial failed (e.g. telephony not configured yet) — treat as a
+                # failed outcome so the contact still finalizes instead of hanging.
+                res = {"conversation_id": "", "outcome": "failed",
+                       "transcript": [], "result": {}}
             outcome = res["outcome"]
 
             if should_retry(outcome, attempt, retry_on, max_attempts):
@@ -73,3 +82,40 @@ class ContactCallWorkflow:
             res["attempts"] = attempt
             res["status"] = status
             return res
+
+
+@workflow.defn
+class CampaignWorkflow:
+    """Fan out over a campaign's contacts, ≤ ``concurrency`` calls in flight, then
+    finalize the campaign. Each contact is an independent child workflow so a
+    single failure never sinks the campaign (return_exceptions=True)."""
+
+    @workflow.run
+    async def run(
+        self,
+        campaign_id: int,
+        contact_ids: list,
+        concurrency: int,
+        retry_on: list,
+        retry_delay_minutes: int,
+        max_attempts: int,
+    ) -> dict:
+        concurrency = max(1, int(concurrency))
+        # Concurrency cap via batching (deterministic, SDK-version-agnostic).
+        for i in range(0, len(contact_ids), concurrency):
+            batch = contact_ids[i:i + concurrency]
+            await asyncio.gather(*[
+                workflow.execute_child_workflow(
+                    ContactCallWorkflow.run,
+                    args=[cid, campaign_id, retry_on, retry_delay_minutes, max_attempts],
+                    id=f"contact-{campaign_id}-{cid}",
+                )
+                for cid in batch
+            ], return_exceptions=True)
+
+        await workflow.execute_activity(
+            finalize_campaign_activity,
+            args=[campaign_id],
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+        return {"campaign_id": campaign_id, "contacts": len(contact_ids)}

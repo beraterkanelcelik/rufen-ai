@@ -162,6 +162,30 @@ def _persist_contact(contact_id, status, attempts, last_outcome, result):
     CampaignContact.objects.filter(id=contact_id).update(**fields)
 
 
+@sync_to_async
+def _finalize_campaign(campaign_id):
+    from django.db import close_old_connections
+    from django.utils import timezone
+
+    from campaigns.models import Campaign
+
+    close_old_connections()
+    Campaign.objects.filter(id=campaign_id).update(
+        status="completed", finished_at=timezone.now()
+    )
+
+
+@activity.defn
+async def finalize_campaign_activity(campaign_id: int) -> None:
+    """Mark the campaign completed and tell the monitor."""
+    await _finalize_campaign(campaign_id)
+    redis = Redis.from_url(os.environ["REDIS_URL"])
+    try:
+        await _publish(redis, campaign_id, {"type": "campaign_status", "status": "completed"})
+    finally:
+        await redis.aclose()
+
+
 @activity.defn
 async def update_contact_status_activity(
     contact_id: int,

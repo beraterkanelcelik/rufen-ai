@@ -8,6 +8,7 @@ status so the monitor can stream simulated runs.
 import io
 import os
 
+from asgiref.sync import async_to_sync
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from django.urls import path
@@ -15,8 +16,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from temporalio.client import Client
 
-from .eleven import list_voices
+from .eleven import create_agent, list_voices
 from .generator import generate_script
 from .importer import parse_contacts
 from .models import Campaign
@@ -69,20 +71,74 @@ def campaign_contacts(request, pk):
     return Response(ContactSerializer(qs, many=True).data)
 
 
+def _ensure_agent(campaign):
+    """Create the per-campaign ElevenLabs agent (prompt + voice + data-collection)
+    if it doesn't have one yet. Returns the agent id."""
+    if campaign.eleven_agent_id:
+        return campaign.eleven_agent_id
+    agent_id = async_to_sync(create_agent)(
+        name=f"Rufen #{campaign.id} — {campaign.name}"[:100],
+        system_prompt=campaign.script_prompt,
+        first_message=campaign.first_message,
+        voice_id=campaign.voice_id,
+        language=campaign.language,
+        data_collection=campaign.extraction_schema,
+    )
+    campaign.eleven_agent_id = agent_id
+    campaign.save(update_fields=["eleven_agent_id"])
+    return agent_id
+
+
+def _start_campaign_workflow(campaign, contact_ids):
+    """Connect a Temporal client and start CampaignWorkflow (id=campaign-{id})."""
+    async def _run():
+        client = await Client.connect(
+            os.environ.get("TEMPORAL_HOST", "temporal:7233"),
+            namespace=os.environ.get("TEMPORAL_NAMESPACE", "rufen"),
+        )
+        await client.start_workflow(
+            "CampaignWorkflow",
+            args=[campaign.id, contact_ids, campaign.concurrency,
+                  campaign.retry_on, campaign.retry_delay_minutes, campaign.max_attempts],
+            id=f"campaign-{campaign.id}",
+            task_queue="campaigns",
+        )
+
+    async_to_sync(_run)()
+
+
 @api_view(["POST"])
 def campaign_launch(request, pk):
+    """Create the ElevenLabs agent + start the Temporal CampaignWorkflow."""
     campaign = get_object_or_404(Campaign, pk=pk)
+    contact_ids = list(campaign.contacts.values_list("id", flat=True))
+
+    started = False
+    if contact_ids:
+        try:
+            _ensure_agent(campaign)
+        except Exception as exc:
+            return Response({"detail": f"agent creation failed: {exc}"},
+                            status=status.HTTP_502_BAD_GATEWAY)
+        try:
+            _start_campaign_workflow(campaign, contact_ids)
+            started = True
+        except Exception as exc:
+            # idempotent: a re-launch of a running campaign is fine
+            if "already" in str(exc).lower():
+                started = True
+            else:
+                return Response({"detail": f"could not start workflow: {exc}"},
+                                status=status.HTTP_502_BAD_GATEWAY)
+
     campaign.status = "running"
     campaign.started_at = timezone.now()
     campaign.save()
 
-    telephony_ready = bool(
-        os.environ.get("ELEVEN_AGENT_PHONE_NUMBER_ID") and campaign.eleven_agent_id
-    )
-    # Real workflow start is wired with CampaignWorkflow (Slice 3); until the SIP
-    # number is imported we just flip status so the monitor can run simulations.
+    telephony_ready = bool(os.environ.get("ELEVEN_AGENT_PHONE_NUMBER_ID"))
     return Response({
         **CampaignSerializer(campaign).data,
+        "workflow_started": started,
         "telephony_ready": telephony_ready,
     })
 

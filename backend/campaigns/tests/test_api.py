@@ -67,6 +67,39 @@ def test_launch_sets_running():
 
 
 @pytest.mark.django_db
+def test_launch_with_contacts_creates_agent_and_starts_workflow(monkeypatch):
+    from campaigns import api as api_module
+
+    calls = {"agent": 0, "workflow": None}
+
+    def fake_ensure_agent(campaign):
+        calls["agent"] += 1
+        campaign.eleven_agent_id = "agent_test_123"
+        campaign.save(update_fields=["eleven_agent_id"])
+        return "agent_test_123"
+
+    def fake_start(campaign, contact_ids):
+        calls["workflow"] = list(contact_ids)
+
+    monkeypatch.setattr(api_module, "_ensure_agent", fake_ensure_agent)
+    monkeypatch.setattr(api_module, "_start_campaign_workflow", fake_start)
+
+    client = APIClient()
+    cid = client.post("/api/campaigns", {**BASE_PAYLOAD, "contacts": [
+        {"name": "Alice", "phone": "+4915112345670", "context": "x", "language": "en"},
+    ]}, format="json").json()["id"]
+
+    r = client.post(f"/api/campaigns/{cid}/launch")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "running"
+    assert body["workflow_started"] is True
+    assert body["eleven_agent_id"] == "agent_test_123"
+    assert calls["agent"] == 1
+    assert len(calls["workflow"]) == 1
+
+
+@pytest.mark.django_db
 def test_patch_campaign_edits_fields():
     client = APIClient()
     cid = client.post("/api/campaigns", {**BASE_PAYLOAD, "contacts": []},
