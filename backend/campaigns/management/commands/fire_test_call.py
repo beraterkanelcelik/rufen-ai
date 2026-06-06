@@ -58,7 +58,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(f"  agent_id = {agent_id}")
 
-        dyn = {"name": opts["name"], "context": opts["context"]}
+        dyn = {"name": opts["name"], "context": opts["context"], "phone": opts["to_number"]}
         self.stdout.write(f"· dialing {opts['to_number']} … (your phone should ring)")
         res = await start_call(agent_id, opts["to_number"], dyn)
         cid = res.get("conversation_id")

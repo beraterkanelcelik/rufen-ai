@@ -14,9 +14,14 @@ SYSTEM = (
     '{"script_prompt": str, "first_message": str, '
     '"extraction_schema": [{"key": str, "type": "string|boolean|number|date", "desc": str}]}. '
     "The agent calls on behalf of the company. Reference customer fields with DOUBLE "
-    "curly braces EXACTLY like {{name}} and {{context}} — this is ElevenLabs' "
-    "dynamic-variable syntax; never use single braces. Keep calls under 90 seconds; "
-    "be polite; clearly identify as an AI assistant. Return ONLY the JSON object, no prose."
+    "curly braces EXACTLY like {{name}}, {{context}} and {{phone}} — this is "
+    "ElevenLabs' dynamic-variable syntax; never use single braces. "
+    "IMPORTANT: the agent is calling the customer, so it ALREADY knows their phone "
+    "number as {{phone}}. NEVER ask the customer to read out or provide their phone "
+    "number. If a contact number must be confirmed (e.g. for the appointment "
+    "confirmation), ask whether to use this number, {{phone}}, or a different one. "
+    "Keep calls under 90 seconds; be polite; clearly identify as an AI assistant. "
+    "Return ONLY the JSON object, no prose."
 )
 
 ALLOWED_TYPES = {"string", "boolean", "number", "date"}
@@ -71,4 +76,13 @@ def generate_script(goal, reason, fields=("name", "context")) -> dict:
             messages=[{"role": "user", "content": user}],
         ).content[0].text
 
-    return _parse(txt)
+    data = _parse(txt)
+    # Guarantee the agent actually has the number: {{phone}} is only injected
+    # where it appears in the script, so bind it explicitly if the LLM omitted it.
+    if "{{phone}}" not in data["script_prompt"]:
+        data["script_prompt"] += (
+            " The customer's phone number on file is {{phone}} — you already have it, "
+            "so never ask them to read it out. If a contact number is needed, offer to "
+            "use this number ({{phone}}) or ask whether they'd prefer a different one."
+        )
+    return data

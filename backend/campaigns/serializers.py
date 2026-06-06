@@ -12,12 +12,13 @@ class ContactSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField()
     campaign_id = serializers.SerializerMethodField()
     last_outcome = serializers.SerializerMethodField()
+    transcript = serializers.SerializerMethodField()
 
     class Meta:
         model = CampaignContact
         fields = [
             "id", "campaign_id", "name", "phone", "context", "language",
-            "status", "attempts", "last_outcome", "result", "created_at",
+            "status", "attempts", "last_outcome", "result", "transcript", "created_at",
         ]
 
     def get_id(self, obj):
@@ -28,6 +29,24 @@ class ContactSerializer(serializers.ModelSerializer):
 
     def get_last_outcome(self, obj):
         return obj.last_outcome or None
+
+    def get_transcript(self, obj):
+        """Latest attempt's transcript, mapped to the frontend's turn shape so the
+        monitor shows it after the call (not only from live WS frames)."""
+        att = obj.call_attempts.order_by("-attempt_no").first()
+        if not att or not att.transcript:
+            return []
+        turns = []
+        for i, t in enumerate(att.transcript):
+            raw = (t.get("role") or "").lower()
+            role = "callee" if raw in ("user", "callee") else "agent"
+            secs = t.get("time_in_call_secs")
+            turns.append({
+                "role": role,
+                "text": t.get("text") or t.get("message") or "",
+                "ts": str(secs if secs is not None else i),
+            })
+        return turns
 
 
 class CampaignSerializer(serializers.ModelSerializer):

@@ -66,6 +66,12 @@ export default function Monitor() {
         setCampaignStatus(c.status);
         setContacts(cs);
         setAgg(aggregateFromContacts(cs));
+        // seed transcripts from saved data so they show after the call / on refresh
+        const seeded: TranscriptMap = {};
+        for (const ct of cs) {
+          if (ct.transcript && ct.transcript.length) seeded[ct.id] = ct.transcript;
+        }
+        setTranscripts(seeded);
       })
       .catch(() => {
         if (active) setCampaign(null);
@@ -103,6 +109,11 @@ export default function Monitor() {
                 : c
             )
           );
+          // Auto-open a contact when it starts calling so the live transcript
+          // is visible without having to expand the row manually.
+          if (e.status === "calling") {
+            setExpanded((prev) => ({ ...prev, [e.contactId]: true }));
+          }
           // Clear any retry countdown once it leaves retry_wait.
           if (e.status !== "retry_wait") {
             setRetries((prev) => {

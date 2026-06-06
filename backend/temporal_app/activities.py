@@ -118,7 +118,13 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
             "attempts": attempt_no, "last_outcome": contact["last_outcome"],
         })
 
-        dyn = {"name": contact["name"], "context": contact["context"] or ""}
+        # bind the contact's own data so the agent already knows it (it's calling
+        # them — it must never ask the customer to read out their own number).
+        dyn = {
+            "name": contact["name"],
+            "context": contact["context"] or "",
+            "phone": contact["phone"],
+        }
         res = await start_call(use_agent, contact["phone"], dyn)
         conversation_id = res["conversation_id"]
 

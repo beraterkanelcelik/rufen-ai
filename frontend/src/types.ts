@@ -70,6 +70,7 @@ export interface CampaignContact {
   attempts: number;
   last_outcome: CallOutcome | null;
   result: Record<string, unknown> | null; // extracted fields
+  transcript?: TranscriptTurn[]; // latest attempt's saved transcript
 
   created_at: string;
 }
