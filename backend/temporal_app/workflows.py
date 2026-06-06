@@ -1,5 +1,5 @@
 """Temporal workflows — orchestration only. Deterministic: no clock/random/IO
-here; the retry delay is a durable ``workflow.sleep`` timer, not time.sleep."""
+here; the retry delay is a durable ``asyncio.sleep`` timer, not time.sleep."""
 import asyncio
 from datetime import timedelta
 
@@ -74,7 +74,9 @@ class ContactCallWorkflow:
                           None, retry_seconds],
                     start_to_close_timeout=timedelta(seconds=30),
                 )
-                await workflow.sleep(timedelta(minutes=retry_delay_minutes))  # durable timer
+                # durable timer: inside a workflow Temporal patches asyncio.sleep
+                # into a deterministic timer (there is no workflow.sleep in the SDK).
+                await asyncio.sleep(retry_delay_minutes * 60)
                 continue
 
             status = terminal_status(outcome, attempt, retry_on, max_attempts)

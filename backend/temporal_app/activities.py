@@ -203,13 +203,15 @@ def _send_confirmation(contact_id, campaign_id):
     from django.db import close_old_connections
 
     from campaigns.models import Campaign, CampaignContact
-    from campaigns.sms import compose_confirmation, send_sms, sms_enabled
+    from campaigns.sms import compose_confirmation, looks_booked, send_sms, sms_enabled
 
     close_old_connections()
     campaign = Campaign.objects.get(id=campaign_id)
     if not sms_enabled() or not campaign.send_sms:  # per-campaign toggle + env gate
         return False
     contact = CampaignContact.objects.get(id=contact_id)
+    if not looks_booked(contact.result):  # only confirm actual bookings, not declines
+        return False
     ok = send_sms(contact.phone, compose_confirmation(contact, campaign))
     if ok:
         CampaignContact.objects.filter(id=contact_id).update(sms_sent=True)
