@@ -18,7 +18,8 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [], "APP_DIRS": True, "OPTIONS": {},
+    # index.html lives in static/; let the template loader find it there too.
+    "DIRS": [BASE_DIR / "static"], "APP_DIRS": True, "OPTIONS": {},
 }]
 ASGI_APPLICATION = "config.asgi.application"
 CHANNEL_LAYERS = {"default": {

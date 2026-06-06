@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>Rufen AI</title>
+<body style="background:#0a0a0a;color:#e0e0e0;font-family:system-ui;padding:2rem">
+<h1 style="color:#f97316">Rufen AI — call test</h1>
+<button id="call" style="background:#f97316;color:#fff;border:0;padding:.7rem 1.2rem;border-radius:999px;font-size:1rem">Call</button>
+<ul id="log" style="margin-top:1.5rem;line-height:1.6"></ul>
+<script>
+const log = (t) => { const li=document.createElement('li'); li.textContent=t; document.getElementById('log').appendChild(li); };
+document.getElementById('call').onclick = async () => {
+  log('placing call…');
+  const r = await fetch('/api/test-call', {method:'POST'});
+  const {conversation_id} = await r.json();
+  log('conversation '+conversation_id);
+  const ws = new WebSocket(`ws://${location.host}/ws/call/${conversation_id}/`);
+  ws.onmessage = (e) => { const m=JSON.parse(e.data);
+    if (m.type==='transcript') log(`${m.role}: ${m.text}`);
+    else if (m.type==='status') log(`[${m.status}]`); };
+};
+</script></body>
