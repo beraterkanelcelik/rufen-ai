@@ -38,7 +38,7 @@ test("monitor renders real contacts and campaign from the backend", async ({ pag
   await expect(page.getByRole("heading", { name: campaign.name })).toBeVisible();
   await expect(page.getByText("E2E Alice")).toBeVisible();
   // contacts table reflects the one contact we created
-  await expect(page.getByText("Contacts", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Contacts/ })).toBeVisible();
 });
 
 test("wizard step 1 is reachable", async ({ page }) => {

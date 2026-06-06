@@ -7,6 +7,7 @@ status so the monitor can stream simulated runs.
 """
 import os
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from django.urls import path
 from django.utils import timezone
@@ -38,14 +39,21 @@ def campaigns_collection(request):
 def campaign_detail(request, pk):
     campaign = get_object_or_404(Campaign, pk=pk)
     if request.method == "PATCH":
+        # NOTE: auth is mocked for this hackathon (locked decision) — no users/
+        # tenancy to scope against. `status` is intentionally NOT editable here:
+        # lifecycle transitions go through dedicated endpoints (launch/…).
         editable = {
             "name", "goal", "reason", "script_prompt", "first_message",
             "extraction_schema", "voice_id", "language", "concurrency",
-            "retry_delay_minutes", "max_attempts", "retry_on", "status",
+            "retry_delay_minutes", "max_attempts", "retry_on",
         }
         for k, v in request.data.items():
             if k in editable:
                 setattr(campaign, k, v)
+        try:
+            campaign.full_clean()  # enforce model field types / choice constraints
+        except DjangoValidationError as exc:
+            return Response(exc.message_dict, status=status.HTTP_400_BAD_REQUEST)
         campaign.save()
     return Response(CampaignSerializer(campaign).data)
 
