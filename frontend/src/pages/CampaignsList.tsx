@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getCampaigns, getContacts } from "../mock/data";
+import { fetchCampaigns } from "../api";
 import { Card, CardBody, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { CampaignStatusBadge, Pill } from "../components/ui/Badge";
@@ -7,20 +8,36 @@ import { ProgressBar } from "../components/ui/ProgressBar";
 import type { Campaign } from "../types";
 
 function completionFor(campaign: Campaign): { done: number; total: number } {
-  const contacts = getContacts(campaign.id);
-  const total = contacts.length || campaign.contact_count;
-  const done = contacts.filter(
-    (c) =>
-      c.status === "completed" ||
-      c.status === "failed" ||
-      c.status === "exhausted"
-  ).length;
+  const total = campaign.contact_count;
+  const done = campaign.done_count ?? 0;
   return { done, total };
 }
 
 export default function CampaignsList() {
-  const campaigns = getCampaigns();
   const navigate = useNavigate();
+  const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCampaigns()
+      .then(setCampaigns)
+      .catch((e) => setError(String(e)));
+  }, []);
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-5xl py-20 text-center text-sm text-red-400">
+        Failed to load campaigns: {error}
+      </div>
+    );
+  }
+  if (campaigns === null) {
+    return (
+      <div className="mx-auto max-w-5xl py-20 text-center text-sm text-[#8a8a8a]">
+        Loading campaigns…
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl">

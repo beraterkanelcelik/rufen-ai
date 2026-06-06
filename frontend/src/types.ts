@@ -53,8 +53,9 @@ export interface Campaign {
   started_at: string | null;
   finished_at: string | null;
 
-  // convenience aggregate (mock): total contacts on the campaign
+  // convenience aggregates from the backend
   contact_count: number;
+  done_count?: number; // contacts in a terminal state (completed/failed/exhausted)
 }
 
 export interface CampaignContact {

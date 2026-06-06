@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createCampaign, launchCampaign } from "../api";
 import { Button } from "../components/ui/Button";
 import { Card, CardBody } from "../components/ui/Card";
 import { Stepper } from "../components/wizard/Stepper";
@@ -66,6 +67,8 @@ export default function Wizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
+  const [submitting, setSubmitting] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   const update = (patch: Partial<WizardDraft>) =>
     setDraft((d) => ({ ...d, ...patch }));
@@ -80,11 +83,37 @@ export default function Wizard() {
     if (step > 0) setStep((s) => s - 1);
   }
 
-  function launch() {
-    // Mock: pretend the backend created + started a campaign, then go to its
-    // live monitor. The monitor's subscribeLive is tuned for the BMW campaign,
-    // so route there for a believable demo.
-    navigate("/campaign/cmp_bmw_airbag");
+  async function launch() {
+    setSubmitting(true);
+    setLaunchError(null);
+    try {
+      const valid = draft.contacts.filter((c) => c.valid);
+      const created = await createCampaign({
+        name: draft.name,
+        goal: draft.goal,
+        reason: draft.reason,
+        script_prompt: draft.script_prompt,
+        first_message: draft.first_message,
+        extraction_schema: draft.extraction_schema,
+        voice_id: draft.voice_id,
+        language: draft.language,
+        concurrency: draft.concurrency,
+        retry_delay_minutes: draft.retry_delay_minutes,
+        max_attempts: draft.max_attempts,
+        retry_on: draft.retry_on,
+        contacts: valid.map((c) => ({
+          name: c.name,
+          phone: c.phone,
+          context: c.context ?? "",
+          language: c.language ?? draft.language,
+        })),
+      });
+      await launchCampaign(created.id);
+      navigate(`/campaign/${created.id}`);
+    } catch (e) {
+      setLaunchError(String(e));
+      setSubmitting(false);
+    }
   }
 
   const StepBody = [
@@ -134,9 +163,14 @@ export default function Wizard() {
             </span>
           )}
           {isLast ? (
-            <Button size="lg" onClick={launch}>
-              ▶ Launch campaign
-            </Button>
+            <div className="flex items-center gap-3">
+              {launchError && (
+                <span className="text-xs text-red-400">{launchError}</span>
+              )}
+              <Button size="lg" onClick={launch} disabled={submitting}>
+                {submitting ? "Launching…" : "▶ Launch campaign"}
+              </Button>
+            </div>
           ) : (
             <Button onClick={next} disabled={!advanceOk}>
               Continue →

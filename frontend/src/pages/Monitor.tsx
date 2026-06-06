@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getCampaign, getContacts, subscribeLive } from "../mock/data";
+import { fetchCampaign, fetchContacts, subscribeLive } from "../api";
 import type {
   AggregateEvent,
+  Campaign,
   CampaignContact,
   CampaignStatus,
   LiveEvent,
@@ -19,33 +20,33 @@ import { downloadCsv } from "../components/monitor/exportCsv";
 type TranscriptMap = Record<string, TranscriptTurn[]>;
 type RetryMap = Record<string, number>;
 
-function emptyAggregate(total: number): AggregateEvent {
+function aggregateFromContacts(contacts: CampaignContact[]): AggregateEvent {
+  const counts = {
+    pending: 0, calling: 0, retry_wait: 0, completed: 0, failed: 0, exhausted: 0,
+  } as Record<string, number>;
+  for (const c of contacts) if (c.status in counts) counts[c.status]++;
+  const finished = counts.completed + counts.failed + counts.exhausted;
   return {
     type: "aggregate",
-    pending: total,
-    calling: 0,
-    retry_wait: 0,
-    completed: 0,
-    failed: 0,
-    exhausted: 0,
-    total,
-    successRate: 0,
+    pending: counts.pending,
+    calling: counts.calling,
+    retry_wait: counts.retry_wait,
+    completed: counts.completed,
+    failed: counts.failed,
+    exhausted: counts.exhausted,
+    total: contacts.length,
+    successRate: finished ? counts.completed / finished : 0,
   };
 }
 
 export default function Monitor() {
   const { id = "" } = useParams();
-  const campaign = useMemo(() => getCampaign(id), [id]);
 
-  const [contacts, setContacts] = useState<CampaignContact[]>(() =>
-    getContacts(id)
-  );
-  const [agg, setAgg] = useState<AggregateEvent>(() =>
-    emptyAggregate(getContacts(id).length)
-  );
-  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>(
-    () => campaign?.status ?? "draft"
-  );
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [contacts, setContacts] = useState<CampaignContact[]>([]);
+  const [agg, setAgg] = useState<AggregateEvent>(() => aggregateFromContacts([]));
+  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>("draft");
   const [transcripts, setTranscripts] = useState<TranscriptMap>({});
   const [retries, setRetries] = useState<RetryMap>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -53,6 +54,29 @@ export default function Monitor() {
 
   // Keep a stable ts counter for synthesized transcript turns.
   const tsRef = useRef(0);
+
+  // ── Load campaign + contacts from the backend ─────────────────────────────
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    Promise.all([fetchCampaign(id), fetchContacts(id)])
+      .then(([c, cs]) => {
+        if (!active) return;
+        setCampaign(c);
+        setCampaignStatus(c.status);
+        setContacts(cs);
+        setAgg(aggregateFromContacts(cs));
+      })
+      .catch(() => {
+        if (active) setCampaign(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   // ── Live subscription ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -131,6 +155,14 @@ export default function Monitor() {
     const unsubscribe = subscribeLive(campaign.id, handle);
     return () => unsubscribe();
   }, [campaign]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-2xl py-20 text-center text-sm text-[#8a8a8a]">
+        Loading campaign…
+      </div>
+    );
+  }
 
   if (!campaign) {
     return (
