@@ -6,7 +6,7 @@ import type {
 } from "react";
 
 const fieldBase =
-  "w-full rounded-[8px] border border-[#212121] bg-[#0a0a0a] px-3 py-2 text-sm text-[#e0e0e0] placeholder-[#5a5a5a] transition-colors focus:border-[#F97316]/60 focus:outline-none focus:ring-2 focus:ring-[#F97316]/20";
+  "w-full rounded-[8px] border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-subtle transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 export function FieldLabel({
   children,
@@ -16,9 +16,9 @@ export function FieldLabel({
   hint?: ReactNode;
 }) {
   return (
-    <label className="mb-1.5 flex items-baseline justify-between text-sm font-medium text-[#e0e0e0]">
+    <label className="mb-1.5 flex items-baseline justify-between text-sm font-medium text-foreground">
       <span>{children}</span>
-      {hint && <span className="text-xs font-normal text-[#8a8a8a]">{hint}</span>}
+      {hint && <span className="text-xs font-normal text-muted">{hint}</span>}
     </label>
   );
 }

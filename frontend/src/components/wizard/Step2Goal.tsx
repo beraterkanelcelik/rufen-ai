@@ -14,7 +14,7 @@ export function Step2Goal({ draft, update }: StepProps) {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Campaign details</h2>
-        <p className="mt-1 text-sm text-[#8a8a8a]">
+        <p className="mt-1 text-sm text-muted">
           Set the dealership campaign parameters — the AI uses these to write a
           tailored call script.
         </p>
@@ -33,13 +33,13 @@ export function Step2Goal({ draft, update }: StepProps) {
                 onClick={() => set({ campaignType: t.id })}
                 className={`flex flex-col items-center rounded-[8px] border px-2 py-3 text-center transition-all ${
                   selected
-                    ? "border-[#F97316]/60 bg-[#F97316]/[0.06]"
-                    : "border-[#212121] hover:border-[#F97316]/40 hover:bg-white/[0.02]"
+                    ? "border-primary/60 bg-primary/[0.06]"
+                    : "border-border hover:border-primary/40 hover:bg-white/[0.02]"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${selected ? "text-[#F97316]" : "text-[#8a8a8a]"}`} />
+                <Icon className={`h-5 w-5 ${selected ? "text-primary" : "text-muted"}`} />
                 <span className="mt-1.5 text-xs font-medium text-white">{t.title}</span>
-                <span className="text-[10px] text-[#8a8a8a]">{t.sub}</span>
+                <span className="text-[10px] text-muted">{t.sub}</span>
               </button>
             );
           })}
@@ -149,35 +149,35 @@ export function Step2Goal({ draft, update }: StepProps) {
       </Field>
 
       <div className="flex flex-wrap gap-4">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-[#e0e0e0]">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             checked={draft.offerLoaner}
             onChange={(e) => set({ offerLoaner: e.target.checked })}
-            className="accent-[#F97316]"
+            className="accent-primary"
           />
           Offer replacement / loaner car
         </label>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-[#e0e0e0]">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             checked={draft.offerPickup}
             onChange={(e) => set({ offerPickup: e.target.checked })}
-            className="accent-[#F97316]"
+            className="accent-primary"
           />
           Offer pick-up &amp; delivery
         </label>
       </div>
 
       {/* Live preview of what the AI generator will receive */}
-      <div className="rounded-[8px] border border-[#212121] bg-[#0a0a0a] p-3">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#8a8a8a]">
+      <div className="rounded-[8px] border border-border bg-background p-3">
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
           AI context preview
         </p>
-        <p className="text-xs text-[#e0e0e0]">
-          <span className="text-[#F97316]">Goal:</span> {draft.goal || "—"}
+        <p className="text-xs text-foreground">
+          <span className="text-primary">Goal:</span> {draft.goal || "—"}
         </p>
-        <p className="mt-1 text-xs leading-relaxed text-[#8a8a8a]">{draft.reason || "—"}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted">{draft.reason || "—"}</p>
       </div>
     </div>
   );

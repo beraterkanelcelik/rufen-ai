@@ -168,7 +168,7 @@ export default function Monitor() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl py-20 text-center text-sm text-[#8a8a8a]">
+      <div className="mx-auto max-w-2xl py-20 text-center text-sm text-muted">
         Loading campaign…
       </div>
     );
@@ -178,10 +178,10 @@ export default function Monitor() {
     return (
       <div className="mx-auto max-w-2xl py-20 text-center">
         <h1 className="text-xl font-semibold text-white">Campaign not found</h1>
-        <p className="mt-2 text-sm text-[#8a8a8a]">
-          No campaign with id <code className="text-[#F97316]">{id}</code>.
+        <p className="mt-2 text-sm text-muted">
+          No campaign with id <code className="text-primary">{id}</code>.
         </p>
-        <Link to="/" className="mt-4 inline-block text-sm text-[#F97316] hover:underline">
+        <Link to="/" className="mt-4 inline-block text-sm text-primary hover:underline">
           ← Back to campaigns
         </Link>
       </div>
@@ -197,7 +197,7 @@ export default function Monitor() {
       <div className="mb-5">
         <Link
           to="/"
-          className="text-xs text-[#8a8a8a] transition-colors hover:text-[#F97316]"
+          className="text-xs text-muted transition-colors hover:text-primary"
         >
           ← Campaigns
         </Link>
@@ -209,7 +209,7 @@ export default function Monitor() {
               </h1>
               <CampaignStatusBadge status={campaignStatus} />
             </div>
-            <p className="mt-1 max-w-2xl text-sm text-[#8a8a8a]">
+            <p className="mt-1 max-w-2xl text-sm text-muted">
               {campaign.goal}
             </p>
           </div>
@@ -223,10 +223,10 @@ export default function Monitor() {
       </div>
 
       {/* Progress */}
-      <div className="mb-5 rounded-[8px] border border-[#212121] bg-[#121212] p-5">
+      <div className="mb-5 rounded-[8px] border border-border bg-card p-5">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium text-white">Campaign progress</span>
-          <span className="tabular-nums text-[#8a8a8a]">
+          <span className="tabular-nums text-muted">
             {finishedAny} / {agg.total} contacts done · {Math.round(progress * 100)}%
           </span>
         </div>
@@ -260,29 +260,29 @@ export default function Monitor() {
       </div>
 
       {/* Contacts table */}
-      <div className="overflow-hidden rounded-[8px] border border-[#212121] bg-[#121212]">
-        <div className="flex items-center justify-between border-b border-[#212121] px-4 py-3">
+      <div className="overflow-hidden rounded-[8px] border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-white">
             Contacts{" "}
-            <span className="text-[#8a8a8a]">({contacts.length})</span>
+            <span className="text-muted">({contacts.length})</span>
           </h2>
           {live && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#F97316]">
-              <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-[#F97316]" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-primary">
+              <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-primary" />
               Live
             </span>
           )}
         </div>
 
         {contacts.length === 0 ? (
-          <div className="px-4 py-12 text-center text-sm text-[#8a8a8a]">
+          <div className="px-4 py-12 text-center text-sm text-muted">
             No contacts on this campaign.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
               <thead>
-                <tr className="text-[11px] uppercase tracking-wide text-[#8a8a8a]">
+                <tr className="text-[11px] uppercase tracking-wide text-muted">
                   <th className="py-2.5 pl-4 pr-2 font-medium">Name</th>
                   <th className="px-2 py-2.5 font-medium">Phone</th>
                   <th className="px-2 py-2.5 font-medium">Status</th>

@@ -19,8 +19,8 @@ function SidebarLink({
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors ${
           isActive
-            ? "bg-[#F97316]/15 text-[#F97316]"
-            : "text-[#8a8a8a] hover:bg-white/5 hover:text-[#e0e0e0]"
+            ? "bg-primary/15 text-primary"
+            : "text-muted hover:bg-white/5 hover:text-foreground"
         }`
       }
     >
@@ -38,15 +38,15 @@ const ListIcon = (
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#212121] bg-[#0d0d0d] p-4 md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-panel p-4 md:flex">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2 pt-1">
           <img src="/brand/icon-dark.svg" alt="" className="h-7 w-auto" />
           <span className="text-lg font-semibold tracking-tight text-white">
             Rufen
           </span>
-          <span className="text-lg font-light text-[#8a8a8a]">× Cara8</span>
+          <span className="text-lg font-light text-muted">× Cara8</span>
         </Link>
 
         <nav className="flex flex-col gap-1">
@@ -55,7 +55,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </SidebarLink>
         </nav>
 
-        <div className="mt-auto px-2 text-xs text-[#8a8a8a]">
+        <div className="mt-auto px-2 text-xs text-muted">
           AI BEAVERS × Mollie
         </div>
       </aside>
@@ -63,17 +63,17 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#212121] bg-[#0d0d0d] px-6">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-panel px-6">
           <Link to="/" className="flex items-center gap-2 md:hidden">
             <img src="/brand/icon-dark.svg" alt="" className="h-6 w-auto" />
             <span className="text-base font-semibold text-white">Rufen × Cara8</span>
           </Link>
           <div className="hidden items-center gap-2 md:flex">
-            <span className="rufen-dot h-2 w-2 rounded-full bg-[#F97316]" />
-            <span className="text-sm text-[#8a8a8a]">Outbound calling campaigns</span>
+            <span className="rufen-dot h-2 w-2 rounded-full bg-primary" />
+            <span className="text-sm text-muted">Outbound calling campaigns</span>
           </div>
           <Link to="/new">
-            <span className="rounded-full bg-[#F97316] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#fb8634]">
+            <span className="rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#fb8634]">
               + New Campaign
             </span>
           </Link>

@@ -64,7 +64,7 @@ export function Step3Script({ draft, update }: StepProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-white">Script</h2>
-          <p className="mt-1 text-sm text-[#8a8a8a]">
+          <p className="mt-1 text-sm text-muted">
             AI drafts the calling instructions, opening line, and the fields to
             capture. Edit anything below.
           </p>
@@ -83,14 +83,14 @@ export function Step3Script({ draft, update }: StepProps) {
       </div>
 
       {!draft.generated ? (
-        <div className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-[#212121] px-6 py-14 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]">
+        <div className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-border px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
             <SparklesIcon className="h-5 w-5" />
           </div>
-          <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
+          <p className="mt-3 text-sm font-medium text-foreground">
             Generate the call script with AI
           </p>
-          <p className="mt-1 max-w-sm text-xs text-[#8a8a8a]">
+          <p className="mt-1 max-w-sm text-xs text-muted">
             Uses your goal, reason, and the contact columns ({"{name}"},{" "}
             {"{context}"}) to draft a system prompt, first message, and
             extraction schema.
@@ -129,27 +129,27 @@ export function Step3Script({ draft, update }: StepProps) {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-[#e0e0e0]">
+              <span className="text-sm font-medium text-foreground">
                 Extraction fields
               </span>
               <Button variant="ghost" size="sm" onClick={addField}>
                 + Add field
               </Button>
             </div>
-            <p className="mb-3 text-xs text-[#8a8a8a]">
+            <p className="mb-3 text-xs text-muted">
               Typed fields captured from each call (e.g. agreed: boolean).
             </p>
 
             <div className="space-y-2">
               {draft.extraction_schema.length === 0 && (
-                <p className="rounded-[8px] border border-dashed border-[#212121] px-3 py-4 text-center text-xs text-[#8a8a8a]">
+                <p className="rounded-[8px] border border-dashed border-border px-3 py-4 text-center text-xs text-muted">
                   No fields yet. Add one to capture structured results.
                 </p>
               )}
               {draft.extraction_schema.map((f, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[minmax(0,9rem)_8rem_minmax(0,1fr)_auto] items-start gap-2 rounded-[8px] border border-[#212121] bg-[#0a0a0a] p-2"
+                  className="grid grid-cols-[minmax(0,9rem)_8rem_minmax(0,1fr)_auto] items-start gap-2 rounded-[8px] border border-border bg-background p-2"
                 >
                   <TextInput
                     value={f.key}
@@ -180,7 +180,7 @@ export function Step3Script({ draft, update }: StepProps) {
                     type="button"
                     onClick={() => removeField(i)}
                     aria-label="Remove field"
-                    className="flex h-9 w-9 items-center justify-center rounded-[8px] text-[#8a8a8a] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    className="flex h-9 w-9 items-center justify-center rounded-[8px] text-muted transition-colors hover:bg-red-500/10 hover:text-red-400"
                   >
                     ✕
                   </button>

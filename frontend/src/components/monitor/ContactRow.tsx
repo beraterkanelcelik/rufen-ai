@@ -16,7 +16,7 @@ function Chevron({ open }: { open: boolean }) {
   return (
     <svg
       viewBox="0 0 16 16"
-      className={`h-3.5 w-3.5 text-[#8a8a8a] transition-transform duration-200 ${
+      className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${
         open ? "rotate-90" : ""
       }`}
       fill="none"
@@ -45,8 +45,8 @@ export function ContactRow({
     <>
       <tr
         onClick={onToggle}
-        className={`cursor-pointer border-t border-[#212121] transition-colors hover:bg-white/[0.025] ${
-          isCalling ? "bg-[#F97316]/[0.04]" : ""
+        className={`cursor-pointer border-t border-border transition-colors hover:bg-white/[0.025] ${
+          isCalling ? "bg-primary/[0.04]" : ""
         }`}
       >
         <td className="py-3 pl-4 pr-2">
@@ -55,7 +55,7 @@ export function ContactRow({
             <span className="font-medium text-white">{c.name}</span>
           </div>
         </td>
-        <td className="px-2 py-3 font-mono text-xs text-[#8a8a8a]">{c.phone}</td>
+        <td className="px-2 py-3 font-mono text-xs text-muted">{c.phone}</td>
         <td className="px-2 py-3">
           <div className="flex items-center gap-2">
             <ContactStatusBadge status={c.status} />
@@ -78,12 +78,12 @@ export function ContactRow({
       </tr>
 
       {expanded && (
-        <tr className="border-t border-[#212121] bg-[#0d0d0d]">
+        <tr className="border-t border-border bg-panel">
           <td colSpan={6} className="px-4 py-4">
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[#8a8a8a]">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Transcript
                   </h4>
                   {isRetry && retrySeconds != null && retrySeconds >= 0 && (
@@ -93,20 +93,20 @@ export function ContactRow({
                     </span>
                   )}
                 </div>
-                <div className="rounded-[8px] border border-[#212121] bg-[#0a0a0a] p-3">
+                <div className="rounded-[8px] border border-border bg-background p-3">
                   <TranscriptView turns={transcript} active={isCalling} />
                 </div>
-                <div className="mt-2 text-[11px] text-[#6a6a6a]">{c.context}</div>
+                <div className="mt-2 text-[11px] text-subtle">{c.context}</div>
               </div>
 
               <div>
-                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#8a8a8a]">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                   Extracted fields
                 </h4>
                 {c.result ? (
                   <ResultFields result={c.result} schema={schema} variant="full" />
                 ) : (
-                  <div className="rounded-[8px] border border-dashed border-[#212121] px-3 py-6 text-center text-xs text-[#6a6a6a]">
+                  <div className="rounded-[8px] border border-dashed border-border px-3 py-6 text-center text-xs text-subtle">
                     {isCalling
                       ? "Extracting once the call completes…"
                       : "No results captured yet."}

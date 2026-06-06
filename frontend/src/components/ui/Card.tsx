@@ -12,11 +12,11 @@ export function Card({
   ...props
 }: CardProps) {
   const hoverCls = hover
-    ? "transition-all duration-200 hover:border-[#F97316]/50 hover:shadow-[0_0_30px_-10px_rgba(249,115,22,0.5)] cursor-pointer"
+    ? "transition-all duration-200 hover:border-primary/50 hover:shadow-[0_0_30px_-10px_rgba(249,115,22,0.5)] cursor-pointer"
     : "";
   return (
     <div
-      className={`rounded-[8px] border border-[#212121] bg-[#121212] ${hoverCls} ${className}`}
+      className={`rounded-[8px] border border-border bg-card ${hoverCls} ${className}`}
       {...props}
     >
       {children}

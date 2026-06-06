@@ -15,8 +15,8 @@ type Tone =
   | "purple";
 
 const tones: Record<Tone, string> = {
-  neutral: "bg-white/5 text-[#8a8a8a] border-[#212121]",
-  orange: "bg-[#F97316]/15 text-[#F97316] border-[#F97316]/30",
+  neutral: "bg-white/5 text-muted border-border",
+  orange: "bg-primary/15 text-primary border-primary/30",
   green: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   red: "bg-red-500/15 text-red-400 border-red-500/30",
   blue: "bg-sky-500/15 text-sky-400 border-sky-500/30",
@@ -72,7 +72,7 @@ export function CampaignStatusBadge({ status }: { status: CampaignStatus }) {
   return (
     <Pill tone={CAMPAIGN_TONE[status]}>
       {status === "running" && (
-        <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-[#F97316]" />
+        <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-primary" />
       )}
       {label(status)}
     </Pill>
@@ -83,7 +83,7 @@ export function ContactStatusBadge({ status }: { status: ContactStatus }) {
   return (
     <Pill tone={CONTACT_TONE[status]}>
       {status === "calling" && (
-        <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-[#F97316]" />
+        <span className="rufen-dot h-1.5 w-1.5 rounded-full bg-primary" />
       )}
       {label(status)}
     </Pill>
@@ -91,6 +91,6 @@ export function ContactStatusBadge({ status }: { status: ContactStatus }) {
 }
 
 export function OutcomeBadge({ outcome }: { outcome: CallOutcome | null }) {
-  if (!outcome) return <span className="text-[#8a8a8a] text-xs">—</span>;
+  if (!outcome) return <span className="text-muted text-xs">—</span>;
   return <Pill tone={OUTCOME_TONE[outcome]}>{label(outcome)}</Pill>;
 }

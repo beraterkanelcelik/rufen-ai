@@ -160,7 +160,7 @@ export default function Wizard() {
         <h1 className="text-2xl font-semibold tracking-tight text-white">
           New Campaign
         </h1>
-        <p className="mt-1 text-sm text-[#8a8a8a]">
+        <p className="mt-1 text-sm text-muted">
           Six quick steps — each is editable and re-runnable.
         </p>
       </div>
@@ -187,7 +187,7 @@ export default function Wizard() {
 
         <div className="flex items-center gap-3">
           {!advanceOk && GATE_HINTS[step] && (
-            <span className="hidden text-xs text-[#8a8a8a] sm:block">
+            <span className="hidden text-xs text-muted sm:block">
               {GATE_HINTS[step]}
             </span>
           )}

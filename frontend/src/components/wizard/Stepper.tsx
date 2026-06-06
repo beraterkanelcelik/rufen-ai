@@ -24,10 +24,10 @@ export function Stepper({ steps, current, onJump }: StepperProps) {
               <span
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
                   active
-                    ? "border-[#F97316] bg-[#F97316] text-white shadow-[0_0_16px_-4px_rgba(249,115,22,0.8)]"
+                    ? "border-primary bg-primary text-white shadow-[0_0_16px_-4px_rgba(249,115,22,0.8)]"
                     : done
-                      ? "border-[#F97316]/50 bg-[#F97316]/15 text-[#F97316]"
-                      : "border-[#212121] bg-transparent text-[#8a8a8a]"
+                      ? "border-primary/50 bg-primary/15 text-primary"
+                      : "border-border bg-transparent text-muted"
                 }`}
               >
                 {done ? "✓" : i + 1}
@@ -37,8 +37,8 @@ export function Stepper({ steps, current, onJump }: StepperProps) {
                   active
                     ? "text-white"
                     : done
-                      ? "text-[#e0e0e0] group-hover:text-white"
-                      : "text-[#8a8a8a]"
+                      ? "text-foreground group-hover:text-white"
+                      : "text-muted"
                 }`}
               >
                 {label}
@@ -47,7 +47,7 @@ export function Stepper({ steps, current, onJump }: StepperProps) {
             {i < steps.length - 1 && (
               <div
                 className={`mx-2 h-px flex-1 transition-colors ${
-                  i < current ? "bg-[#F97316]/50" : "bg-[#212121]"
+                  i < current ? "bg-primary/50" : "bg-border"
                 }`}
               />
             )}

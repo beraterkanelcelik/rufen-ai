@@ -10,8 +10,8 @@ import type { StepProps, WizardDraft } from "./types";
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex gap-4 py-2 text-sm">
-      <span className="w-32 shrink-0 text-[#8a8a8a]">{label}</span>
-      <span className="min-w-0 flex-1 text-[#e0e0e0]">{children}</span>
+      <span className="w-32 shrink-0 text-muted">{label}</span>
+      <span className="min-w-0 flex-1 text-foreground">{children}</span>
     </div>
   );
 }
@@ -86,7 +86,7 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
       <CardBody className="space-y-3 pt-4">
         <div>
           <h3 className="text-sm font-semibold text-white">Test call (optional)</h3>
-          <p className="mt-1 text-xs text-[#8a8a8a]">
+          <p className="mt-1 text-xs text-muted">
             Ring your own phone with this exact script &amp; voice before launching
             the campaign.
           </p>
@@ -109,12 +109,12 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
           </Button>
         </div>
         {!draft.generated && (
-          <p className="text-xs text-[#8a8a8a]">Generate the script first (step 3).</p>
+          <p className="text-xs text-muted">Generate the script first (step 3).</p>
         )}
         {error && <p className="text-xs text-red-400">{error}</p>}
         {(callStatus || turns.length > 0) && (
-          <div className="rounded-[8px] border border-[#212121] bg-[#0a0a0a] p-3">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#8a8a8a]">
+          <div className="rounded-[8px] border border-border bg-background p-3">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted">
               {callStatus === "done"
                 ? "Call finished"
                 : callStatus === "failed"
@@ -126,7 +126,7 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
             )}
             <div className="max-h-56 space-y-1.5 overflow-y-auto">
               {turns.length === 0 ? (
-                <p className="text-xs text-[#8a8a8a]">
+                <p className="text-xs text-muted">
                   Pick up your phone — the transcript appears here.
                 </p>
               ) : (
@@ -134,12 +134,12 @@ function TestCallCard({ draft }: { draft: WizardDraft }) {
                   <div key={i} className="text-xs">
                     <span
                       className={
-                        t.role === "agent" ? "text-[#F97316]" : "text-[#8a8a8a]"
+                        t.role === "agent" ? "text-primary" : "text-muted"
                       }
                     >
                       {t.role === "agent" ? "Agent" : "Callee"}:
                     </span>{" "}
-                    <span className="text-[#e0e0e0]">{t.text}</span>
+                    <span className="text-foreground">{t.text}</span>
                   </div>
                 ))
               )}
@@ -161,13 +161,13 @@ export function Step6Review({ draft }: StepProps) {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Review &amp; launch</h2>
-        <p className="mt-1 text-sm text-[#8a8a8a]">
+        <p className="mt-1 text-sm text-muted">
           Confirm everything looks right, then start calling.
         </p>
       </div>
 
       <Card>
-        <CardBody className="divide-y divide-[#212121] pt-3">
+        <CardBody className="divide-y divide-border pt-3">
           <Row label="Campaign">
             <span className="font-medium text-white">
               {draft.name || "Untitled campaign"}
@@ -176,7 +176,7 @@ export function Step6Review({ draft }: StepProps) {
           <Row label="Type">
             <span className="inline-flex flex-wrap items-center gap-2">
               <Pill tone="orange">{draft.campaignType}</Pill>
-              <span className="text-[#8a8a8a]">{draft.brand}</span>
+              <span className="text-muted">{draft.brand}</span>
             </span>
           </Row>
           <Row label="Action / models">
@@ -190,7 +190,7 @@ export function Step6Review({ draft }: StepProps) {
               <span className="font-medium text-white">
                 {validContacts}
               </span>
-              <span className="text-[#8a8a8a]">will be called</span>
+              <span className="text-muted">will be called</span>
               {draft.fileName && (
                 <Pill tone="neutral">{draft.fileName}</Pill>
               )}
@@ -219,7 +219,7 @@ export function Step6Review({ draft }: StepProps) {
                 ))}
               </span>
             ) : (
-              <span className="text-[#8a8a8a]">never retry</span>
+              <span className="text-muted">never retry</span>
             )}
           </Row>
           <Row label="Extraction">
@@ -232,7 +232,7 @@ export function Step6Review({ draft }: StepProps) {
                 ))}
               </span>
             ) : (
-              <span className="text-[#8a8a8a]">none</span>
+              <span className="text-muted">none</span>
             )}
           </Row>
         </CardBody>
@@ -240,7 +240,7 @@ export function Step6Review({ draft }: StepProps) {
 
       <TestCallCard draft={draft} />
 
-      <p className="text-center text-xs text-[#8a8a8a]">
+      <p className="text-center text-xs text-muted">
         On launch, the campaign starts immediately and you'll be taken to the
         live monitor.
       </p>

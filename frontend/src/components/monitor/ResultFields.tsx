@@ -20,7 +20,7 @@ function fmt(value: unknown): { text: string; tone: "neutral" | "green" | "red" 
 }
 
 const TONE_CLS: Record<"neutral" | "green" | "red", string> = {
-  neutral: "bg-white/5 text-[#c0c0c0] border-[#212121]",
+  neutral: "bg-white/5 text-[#c0c0c0] border-border",
   green: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   red: "bg-red-500/15 text-red-400 border-red-500/30",
 };
@@ -34,7 +34,7 @@ export function ResultFields({
   variant = "compact",
 }: ResultFieldsProps) {
   if (!result || Object.keys(result).length === 0) {
-    return <span className="text-xs text-[#8a8a8a]">—</span>;
+    return <span className="text-xs text-muted">—</span>;
   }
 
   // Use the schema for ordering/labels, but include any extra keys too.
@@ -54,13 +54,13 @@ export function ResultFields({
               title={`${label(k)}: ${text}`}
               className={`inline-flex max-w-[10rem] items-center gap-1 truncate rounded border px-1.5 py-0.5 text-[10px] ${TONE_CLS[tone]}`}
             >
-              <span className="text-[#8a8a8a]">{label(k)}:</span>
+              <span className="text-muted">{label(k)}:</span>
               <span className="font-medium">{text}</span>
             </span>
           );
         })}
         {keys.length > 3 && (
-          <span className="text-[10px] text-[#8a8a8a]">+{keys.length - 3}</span>
+          <span className="text-[10px] text-muted">+{keys.length - 3}</span>
         )}
       </div>
     );
@@ -74,9 +74,9 @@ export function ResultFields({
         return (
           <div
             key={k}
-            className="rounded-[8px] border border-[#212121] bg-[#0a0a0a] px-3 py-2"
+            className="rounded-[8px] border border-border bg-background px-3 py-2"
           >
-            <div className="text-[11px] uppercase tracking-wide text-[#8a8a8a]">
+            <div className="text-[11px] uppercase tracking-wide text-muted">
               {label(k)}
             </div>
             <div className="mt-0.5 flex items-center gap-2">
@@ -87,7 +87,7 @@ export function ResultFields({
               </span>
             </div>
             {field?.desc && (
-              <div className="mt-1 text-[10px] leading-snug text-[#6a6a6a]">
+              <div className="mt-1 text-[10px] leading-snug text-subtle">
                 {field.desc}
               </div>
             )}

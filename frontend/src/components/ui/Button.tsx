@@ -10,14 +10,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]/60 disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none";
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-50 disabled:pointer-events-none cursor-pointer select-none";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-[#F97316] text-white hover:bg-[#fb8634] active:bg-[#ea670d] shadow-[0_0_20px_-6px_rgba(249,115,22,0.7)]",
+    "bg-primary text-white hover:bg-[#fb8634] active:bg-[#ea670d] shadow-[0_0_20px_-6px_rgba(249,115,22,0.7)]",
   outline:
-    "border border-[#212121] text-[#e0e0e0] hover:border-[#F97316]/60 hover:text-white bg-transparent",
-  ghost: "text-[#8a8a8a] hover:text-white hover:bg-white/5",
+    "border border-border text-foreground hover:border-primary/60 hover:text-white bg-transparent",
+  ghost: "text-muted hover:text-white hover:bg-white/5",
 };
 
 const sizes: Record<Size, string> = {

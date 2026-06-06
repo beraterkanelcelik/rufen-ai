@@ -67,7 +67,7 @@ export default function CampaignsList() {
   }
   if (campaigns === null) {
     return (
-      <div className="mx-auto max-w-5xl py-20 text-center text-sm text-[#8a8a8a]">
+      <div className="mx-auto max-w-5xl py-20 text-center text-sm text-muted">
         Loading campaigns…
       </div>
     );
@@ -80,7 +80,7 @@ export default function CampaignsList() {
           <h1 className="text-2xl font-semibold tracking-tight text-white">
             Campaigns
           </h1>
-          <p className="mt-1 text-sm text-[#8a8a8a]">
+          <p className="mt-1 text-sm text-muted">
             Outbound AI calling campaigns — upload a list, set a goal, let the
             agents work it.
           </p>
@@ -90,7 +90,7 @@ export default function CampaignsList() {
             type="button"
             onClick={handleDeleteAll}
             disabled={deleting === "__all__"}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#262626] px-3.5 py-1.5 text-sm text-[#8a8a8a] transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm text-muted transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
           >
             <TrashIcon className="h-3.5 w-3.5" />
             {deleting === "__all__" ? "Deleting…" : "Delete all"}
@@ -100,9 +100,9 @@ export default function CampaignsList() {
 
       {campaigns.length === 0 ? (
         <Card>
-          <CardBody className="py-16 text-center text-[#8a8a8a]">
+          <CardBody className="py-16 text-center text-muted">
             No campaigns yet.{" "}
-            <Link to="/new" className="text-[#F97316] hover:underline">
+            <Link to="/new" className="text-primary hover:underline">
               Create your first one
             </Link>
             .
@@ -128,7 +128,7 @@ export default function CampaignsList() {
                           title="Delete campaign"
                           disabled={deleting === c.id}
                           onClick={(e) => handleDelete(e, c)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-[#5a5a5a] transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-subtle transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
                         >
                           <TrashIcon className="h-3.5 w-3.5" />
                         </button>
@@ -136,12 +136,12 @@ export default function CampaignsList() {
                     </div>
                   </CardHeader>
                   <CardBody>
-                    <p className="line-clamp-2 min-h-[2.5rem] text-sm text-[#8a8a8a]">
+                    <p className="line-clamp-2 min-h-[2.5rem] text-sm text-muted">
                       {c.goal}
                     </p>
 
                     <div className="mt-4 space-y-2">
-                      <div className="flex items-center justify-between text-xs text-[#8a8a8a]">
+                      <div className="flex items-center justify-between text-xs text-muted">
                         <span>
                           {done} / {total} contacts
                         </span>

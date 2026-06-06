@@ -39,12 +39,12 @@ export function Step1Contacts({ draft, update }: StepProps) {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white">Contacts</h2>
-        <p className="mt-1 text-sm text-[#8a8a8a]">
+        <p className="mt-1 text-sm text-muted">
           Upload your customer list. Required columns:{" "}
-          <code className="text-[#e0e0e0]">name</code>,{" "}
-          <code className="text-[#e0e0e0]">phone</code>. Optional:{" "}
-          <code className="text-[#e0e0e0]">context</code>,{" "}
-          <code className="text-[#e0e0e0]">language</code>.
+          <code className="text-foreground">name</code>,{" "}
+          <code className="text-foreground">phone</code>. Optional:{" "}
+          <code className="text-foreground">context</code>,{" "}
+          <code className="text-foreground">language</code>.
         </p>
       </div>
 
@@ -75,14 +75,14 @@ export function Step1Contacts({ draft, update }: StepProps) {
             onClick={() => inputRef.current?.click()}
             className={`flex cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-6 py-14 text-center transition-colors ${
               dragging
-                ? "border-[#F97316] bg-[#F97316]/5"
-                : "border-[#212121] hover:border-[#F97316]/50 hover:bg-white/[0.02]"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50 hover:bg-white/[0.02]"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F97316]/15 text-[#F97316]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
               <UploadIcon className="h-5 w-5" />
             </div>
-            <p className="mt-3 text-sm font-medium text-[#e0e0e0]">
+            <p className="mt-3 text-sm font-medium text-foreground">
               {busy ? "Parsing…" : (
                 <>
                   Drop your <span className="text-white">.xlsx</span> or{" "}
@@ -90,7 +90,7 @@ export function Step1Contacts({ draft, update }: StepProps) {
                 </>
               )}
             </p>
-            <p className="mt-1 text-xs text-[#8a8a8a]">
+            <p className="mt-1 text-xs text-muted">
               or click to choose a file (columns: name, phone, context, language)
             </p>
           </div>
@@ -98,14 +98,14 @@ export function Step1Contacts({ draft, update }: StepProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-[#212121] bg-[#0a0a0a] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-border bg-background px-4 py-3">
             <div className="flex items-center gap-3">
-              <FileIcon className="h-5 w-5 text-[#8a8a8a]" />
+              <FileIcon className="h-5 w-5 text-muted" />
               <div>
                 <p className="text-sm font-medium text-white">
                   {draft.fileName}
                 </p>
-                <p className="text-xs text-[#8a8a8a]">
+                <p className="text-xs text-muted">
                   {draft.contacts.length} rows parsed
                 </p>
               </div>
@@ -119,9 +119,9 @@ export function Step1Contacts({ draft, update }: StepProps) {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[8px] border border-[#212121]">
+          <div className="overflow-hidden rounded-[8px] border border-border">
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/[0.02] text-xs uppercase tracking-wide text-[#8a8a8a]">
+              <thead className="bg-white/[0.02] text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-4 py-2.5 font-medium">Name</th>
                   <th className="px-4 py-2.5 font-medium">Phone</th>
@@ -134,22 +134,22 @@ export function Step1Contacts({ draft, update }: StepProps) {
                 {draft.contacts.map((c, i) => (
                   <tr
                     key={i}
-                    className={`border-t border-[#212121] ${
+                    className={`border-t border-border ${
                       c.valid ? "" : "bg-red-500/[0.04]"
                     }`}
                   >
-                    <td className="px-4 py-2.5 text-[#e0e0e0]">
+                    <td className="px-4 py-2.5 text-foreground">
                       {c.name || (
-                        <span className="text-[#8a8a8a] italic">—</span>
+                        <span className="text-muted italic">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-[#e0e0e0]">
+                    <td className="px-4 py-2.5 font-mono text-xs text-foreground">
                       {c.phone}
                     </td>
-                    <td className="max-w-[18rem] truncate px-4 py-2.5 text-[#8a8a8a]">
+                    <td className="max-w-[18rem] truncate px-4 py-2.5 text-muted">
                       {c.context}
                     </td>
-                    <td className="px-4 py-2.5 text-[#8a8a8a]">
+                    <td className="px-4 py-2.5 text-muted">
                       {c.language.toUpperCase()}
                     </td>
                     <td className="px-4 py-2.5">
@@ -166,7 +166,7 @@ export function Step1Contacts({ draft, update }: StepProps) {
           </div>
 
           {invalid > 0 && (
-            <p className="text-xs text-[#8a8a8a]">
+            <p className="text-xs text-muted">
               {invalid} invalid row{invalid === 1 ? "" : "s"} will be skipped.{" "}
               {valid} contact{valid === 1 ? "" : "s"} will be called.
             </p>
