@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { deleteCampaign, fetchCampaigns } from "../api";
 import { Card, CardBody, CardHeader } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
 import { CampaignStatusBadge, Pill } from "../components/ui/Badge";
 import { ProgressBar } from "../components/ui/ProgressBar";
 import type { Campaign } from "../types";
@@ -13,8 +12,24 @@ function completionFor(campaign: Campaign): { done: number; total: number } {
   return { done, total };
 }
 
+function TrashIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-13M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+    </svg>
+  );
+}
+
 export default function CampaignsList() {
-  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -37,6 +52,23 @@ export default function CampaignsList() {
       setCampaigns((prev) => (prev ? prev.filter((x) => x.id !== c.id) : prev));
     } catch (err) {
       window.alert(`Could not delete: ${err}`);
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  async function handleDeleteAll() {
+    if (!campaigns || campaigns.length === 0) return;
+    if (!window.confirm(`Delete all ${campaigns.length} campaigns? This can't be undone.`)) {
+      return;
+    }
+    setDeleting("__all__");
+    try {
+      await Promise.all(campaigns.map((c) => deleteCampaign(c.id)));
+      setCampaigns([]);
+    } catch (err) {
+      window.alert(`Could not delete all: ${err}`);
+      fetchCampaigns().then(setCampaigns).catch(() => {});
     } finally {
       setDeleting(null);
     }
@@ -69,7 +101,17 @@ export default function CampaignsList() {
             agents work it.
           </p>
         </div>
-        <Button onClick={() => navigate("/new")}>+ New Campaign</Button>
+        {campaigns.length > 0 && (
+          <button
+            type="button"
+            onClick={handleDeleteAll}
+            disabled={deleting === "__all__"}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#262626] px-3.5 py-1.5 text-sm text-[#8a8a8a] transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+          >
+            <TrashIcon className="h-3.5 w-3.5" />
+            {deleting === "__all__" ? "Deleting…" : "Delete all"}
+          </button>
+        )}
       </div>
 
       {campaigns.length === 0 ? (
@@ -102,9 +144,9 @@ export default function CampaignsList() {
                           title="Delete campaign"
                           disabled={deleting === c.id}
                           onClick={(e) => handleDelete(e, c)}
-                          className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[#8a8a8a] transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-[#5a5a5a] transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
                         >
-                          {deleting === c.id ? "…" : "🗑"}
+                          <TrashIcon className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>

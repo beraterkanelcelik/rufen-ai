@@ -30,12 +30,6 @@ function SidebarLink({
   );
 }
 
-const PlusIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-  </svg>
-);
-
 const ListIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
     <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" strokeLinecap="round" />
@@ -56,9 +50,6 @@ export function Layout({ children }: { children: ReactNode }) {
         </Link>
 
         <nav className="flex flex-col gap-1">
-          <SidebarLink to="/new" icon={PlusIcon}>
-            New Campaign
-          </SidebarLink>
           <SidebarLink to="/" icon={ListIcon} end>
             Campaigns
           </SidebarLink>
