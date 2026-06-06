@@ -10,6 +10,7 @@ import { Step3Script } from "../components/wizard/Step3Script";
 import { Step4Voice } from "../components/wizard/Step4Voice";
 import { Step5Settings } from "../components/wizard/Step5Settings";
 import { Step6Review } from "../components/wizard/Step6Review";
+import { composeGoal, composeReason } from "../components/wizard/dealership";
 import type { WizardDraft } from "../components/wizard/types";
 
 const STEP_LABELS = [
@@ -21,24 +22,50 @@ const STEP_LABELS = [
   "Review",
 ];
 
-const INITIAL_DRAFT: WizardDraft = {
-  contacts: [],
-  fileName: null,
-  name: "",
-  goal: "",
-  reason: "",
-  generated: false,
-  script_prompt: "",
-  first_message: "",
-  extraction_schema: [],
-  voice_id: "",
-  voice_name: "",
-  language: "en",
-  concurrency: 2,
-  retry_delay_minutes: 15,
-  max_attempts: 3,
-  retry_on: ["no_answer", "busy", "failed"],
-};
+function makeInitialDraft(): WizardDraft {
+  // Pre-filled with a realistic BMW recall so the demo is fast (all editable).
+  const d: WizardDraft = {
+    contacts: [],
+    fileName: null,
+    name: "BMW Airbag Recall 23V-456 — Q2",
+    goal: "",
+    reason: "",
+    // car-dealership context builder
+    campaignType: "recall",
+    brand: "BMW / Mini",
+    dealershipLocation: "BMW Zentrum Hamburg-Altona",
+    responsibleEmployee: "Max Schwarz (Service Lead)",
+    actionId: "Recall 23V-456",
+    urgency: "High",
+    affectedModels: "X5 (2019–2022), X3",
+    affectedPart: "Airbag inflator module",
+    actionReason:
+      "The airbag inflator may deploy improperly; affected vehicles must be inspected and the part replaced at no cost.",
+    durationMinutes: 90,
+    customerCost: "Free of charge",
+    deadline: "",
+    primaryGoal: "Book a free service appointment",
+    offerLoaner: true,
+    offerPickup: false,
+    internalNotes: "",
+    generated: false,
+    script_prompt: "",
+    first_message: "",
+    extraction_schema: [],
+    voice_id: "",
+    voice_name: "",
+    language: "en",
+    concurrency: 2,
+    retry_delay_minutes: 15,
+    max_attempts: 3,
+    retry_on: ["no_answer", "busy", "failed"],
+  };
+  d.goal = composeGoal(d);
+  d.reason = composeReason(d);
+  return d;
+}
+
+const INITIAL_DRAFT: WizardDraft = makeInitialDraft();
 
 // Per-step gate: can the user advance from `step`?
 function canAdvance(step: number, d: WizardDraft): boolean {
@@ -46,7 +73,7 @@ function canAdvance(step: number, d: WizardDraft): boolean {
     case 0:
       return d.contacts.some((c) => c.valid);
     case 1:
-      return d.name.trim().length > 0 && d.goal.trim().length > 0;
+      return d.name.trim().length > 0 && d.actionReason.trim().length > 0;
     case 2:
       return d.generated;
     case 3:
@@ -60,7 +87,7 @@ function canAdvance(step: number, d: WizardDraft): boolean {
 
 const GATE_HINTS: Record<number, string> = {
   0: "Upload a list with at least one valid contact to continue.",
-  1: "Add a campaign name and goal to continue.",
+  1: "Add a campaign name and reason to continue.",
   2: "Generate the script to continue.",
 };
 

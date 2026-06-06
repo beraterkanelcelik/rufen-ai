@@ -5,6 +5,15 @@ import type {
   Language,
 } from "../../types";
 
+export type CampaignType =
+  | "recall"
+  | "warranty"
+  | "service"
+  | "reactivation"
+  | "custom";
+
+export type Urgency = "Immediate" | "High" | "Medium" | "Low";
+
 /** A row parsed from the uploaded contacts file. */
 export interface DraftContact {
   name: string;
@@ -22,10 +31,28 @@ export interface WizardDraft {
   contacts: DraftContact[];
   fileName: string | null;
 
-  // Step 2 — goal & reason
+  // Step 2 — car-dealership campaign context builder.
+  // The structured fields below are composed into `goal` + `reason` (derived),
+  // which feed the AI script generator and the call pipeline.
   name: string;
-  goal: string;
-  reason: string;
+  goal: string; // derived from campaignType + primaryGoal
+  reason: string; // derived: rich context the agent relies on
+  campaignType: CampaignType;
+  brand: string;
+  dealershipLocation: string;
+  responsibleEmployee: string;
+  actionId: string; // recall / action reference
+  urgency: Urgency;
+  affectedModels: string;
+  affectedPart: string;
+  actionReason: string; // plain-language explanation for the customer
+  durationMinutes: number;
+  customerCost: string;
+  deadline: string;
+  primaryGoal: string;
+  offerLoaner: boolean;
+  offerPickup: boolean;
+  internalNotes: string;
 
   // Step 3 — script (AI)
   generated: boolean;

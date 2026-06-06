@@ -34,6 +34,16 @@ export function Step6Review({ draft }: StepProps) {
               {draft.name || "Untitled campaign"}
             </span>
           </Row>
+          <Row label="Type">
+            <span className="inline-flex flex-wrap items-center gap-2">
+              <Pill tone="orange">{draft.campaignType}</Pill>
+              <span className="text-[#8a8a8a]">{draft.brand}</span>
+            </span>
+          </Row>
+          <Row label="Action / models">
+            {[draft.actionId, draft.affectedModels].filter(Boolean).join(" · ") || "—"}
+          </Row>
+          <Row label="Dealership">{draft.dealershipLocation || "—"}</Row>
           <Row label="Goal">{draft.goal || "—"}</Row>
           <Row label="Reason">{draft.reason || "—"}</Row>
           <Row label="Contacts">
