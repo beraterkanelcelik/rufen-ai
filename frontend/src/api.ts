@@ -50,6 +50,15 @@ export const launchCampaign = (id: string) =>
 /** Direct URL for the sanitized server-side CSV export (open in a new tab). */
 export const campaignExportUrl = (id: string) => `${API_BASE}/campaigns/${id}/export`;
 
+export interface InsightsResult {
+  insights: string;
+  model: string;
+}
+
+/** Qwen-generated campaign summary + insights (local Ollama model). */
+export const fetchInsights = (id: string) =>
+  http<InsightsResult>(`/campaigns/${id}/insights`);
+
 export async function deleteCampaign(id: string): Promise<void> {
   const res = await fetch(`${API_BASE}/campaigns/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error(`DELETE /campaigns/${id} → ${res.status}`);

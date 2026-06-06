@@ -24,6 +24,7 @@ from .eleven import create_agent, delete_agent, get_conversation, list_voices, s
 from .export import build_csv
 from .generator import generate_script
 from .importer import parse_contacts
+from .insights import generate_insights
 
 # Hard cap on concurrency = min(ElevenLabs plan, Telnyx channels) — see CLAUDE.md.
 CONCURRENCY_CAP = 2
@@ -168,6 +169,18 @@ def campaign_launch(request, pk):
 
 
 @api_view(["GET"])
+def campaign_insights(request, pk):
+    """Qwen-generated summary + insights for a campaign (local Ollama model)."""
+    campaign = get_object_or_404(Campaign, pk=pk)
+    try:
+        text = generate_insights(campaign)
+    except Exception as exc:
+        return Response({"detail": f"insights unavailable (is the local Qwen/Ollama running?): {exc}"},
+                        status=status.HTTP_502_BAD_GATEWAY)
+    return Response({"insights": text, "model": os.environ.get("QWEN_MODEL", "qwen2.5:3b")})
+
+
+@api_view(["GET"])
 def campaign_export(request, pk):
     """Download campaign results as a sanitized CSV (formula-injection safe)."""
     campaign = get_object_or_404(Campaign, pk=pk)
@@ -299,4 +312,5 @@ urlpatterns = [
     path("test-call", test_call),
     path("test-call/<str:cid>", test_call_status),
     path("campaigns/<int:pk>/export", campaign_export),
+    path("campaigns/<int:pk>/insights", campaign_insights),
 ]

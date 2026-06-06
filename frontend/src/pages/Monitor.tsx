@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { campaignExportUrl, fetchCampaign, fetchContacts, subscribeLive } from "../api";
+import { campaignExportUrl, fetchCampaign, fetchContacts, fetchInsights, subscribeLive } from "../api";
+import { SparklesIcon } from "../components/ui/icons";
 import type {
   AggregateEvent,
   Campaign,
@@ -50,6 +51,22 @@ export default function Monitor() {
   const [retries, setRetries] = useState<RetryMap>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [live, setLive] = useState(false);
+  const [insights, setInsights] = useState<string | null>(null);
+  const [insightsBusy, setInsightsBusy] = useState(false);
+  const [insightsErr, setInsightsErr] = useState<string | null>(null);
+
+  async function loadInsights() {
+    setInsightsBusy(true);
+    setInsightsErr(null);
+    try {
+      const r = await fetchInsights(id);
+      setInsights(r.insights);
+    } catch (e) {
+      setInsightsErr(String(e));
+    } finally {
+      setInsightsBusy(false);
+    }
+  }
 
   // Keep a stable ts counter for synthesized transcript turns.
   const tsRef = useRef(0);
@@ -257,6 +274,31 @@ export default function Monitor() {
       {/* Concurrency gauge */}
       <div className="mb-6 grid grid-cols-1 gap-3 sm:max-w-sm">
         <ConcurrencyGauge active={agg.calling} capacity={campaign.concurrency} />
+      </div>
+
+      {/* AI insights (local Qwen) */}
+      <div className="mb-6 rounded-[8px] border border-border bg-card p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <SparklesIcon className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-white">AI insights</h2>
+            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-subtle">Qwen · local</span>
+          </div>
+          <Button variant="outline" onClick={loadInsights} disabled={insightsBusy}>
+            {insightsBusy ? "Analyzing…" : insights ? "Regenerate" : "Generate insights"}
+          </Button>
+        </div>
+        {insightsErr && <p className="mt-3 text-xs text-red-400">{insightsErr}</p>}
+        {insights && (
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            {insights}
+          </p>
+        )}
+        {!insights && !insightsErr && (
+          <p className="mt-3 text-xs text-muted">
+            Summarize outcomes and get next-step suggestions from a local Qwen model.
+          </p>
+        )}
       </div>
 
       {/* Contacts table */}
