@@ -183,6 +183,43 @@ export default function Monitor() {
     return () => unsubscribe();
   }, [campaign]);
 
+  // Safety net: poll the backend so the final transcript / result / status always
+  // reflect even if a live WS frame is missed — no manual refresh needed.
+  useEffect(() => {
+    if (!campaign) return;
+    const TERMINAL = ["completed", "failed", "exhausted"];
+    let stopped = false;
+    let interval: ReturnType<typeof setInterval>;
+    const tick = async () => {
+      try {
+        const [c, cs] = await Promise.all([fetchCampaign(id), fetchContacts(id)]);
+        if (stopped) return;
+        setCampaignStatus(c.status);
+        setContacts(cs);
+        setAgg(aggregateFromContacts(cs));
+        // backfill transcripts from the DB for TERMINAL contacts only (their
+        // transcript is final); never clobber a live-streaming call's turns.
+        setTranscripts((prev) => {
+          const next = { ...prev };
+          for (const ct of cs) {
+            if (TERMINAL.includes(ct.status) && ct.transcript && ct.transcript.length) {
+              next[ct.id] = ct.transcript;
+            }
+          }
+          return next;
+        });
+        if (["completed", "cancelled"].includes(c.status)) clearInterval(interval);
+      } catch {
+        /* transient — keep polling */
+      }
+    };
+    interval = setInterval(tick, 3500);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [campaign?.id, id]);
+
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl py-20 text-center text-sm text-muted">
