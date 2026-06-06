@@ -29,6 +29,7 @@ export interface CreateCampaignBody {
   name: string;
   goal: string;
   reason: string;
+  dealership_name: string;
   script_prompt: string;
   first_message: string;
   extraction_schema: Campaign["extraction_schema"];

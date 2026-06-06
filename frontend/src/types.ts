@@ -32,6 +32,7 @@ export interface Campaign {
   name: string;
   goal: string;
   reason: string;
+  dealership_name: string;
   status: CampaignStatus;
 
   // script (AI-generated, user-editable)

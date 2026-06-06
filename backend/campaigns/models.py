@@ -17,6 +17,7 @@ class Campaign(models.Model):
     name = models.CharField(max_length=255)
     goal = models.TextField(blank=True)
     reason = models.TextField(blank=True)
+    dealership_name = models.CharField(max_length=255, blank=True)  # SMS sign-off / sender tag
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.DRAFT
     )

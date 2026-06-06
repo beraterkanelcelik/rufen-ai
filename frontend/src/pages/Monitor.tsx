@@ -16,6 +16,7 @@ import { ProgressBar } from "../components/ui/ProgressBar";
 import { StatCard } from "../components/monitor/StatCard";
 import { ConcurrencyGauge } from "../components/monitor/ConcurrencyGauge";
 import { ContactRow } from "../components/monitor/ContactRow";
+import { InsightsView } from "../components/monitor/InsightsView";
 
 type TranscriptMap = Record<string, TranscriptTurn[]>;
 type RetryMap = Record<string, number>;
@@ -334,11 +335,7 @@ export default function Monitor() {
           </Button>
         </div>
         {insightsErr && <p className="mt-3 text-xs text-red-400">{insightsErr}</p>}
-        {insights && (
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-            {insights}
-          </p>
-        )}
+        {insights && <InsightsView text={insights} />}
         {!insights && !insightsErr && (
           <p className="mt-3 text-xs text-muted">
             Summarize outcomes and get next-step suggestions from a local Qwen model.

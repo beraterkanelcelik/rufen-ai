@@ -58,7 +58,7 @@ class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = [
-            "id", "name", "goal", "reason", "status",
+            "id", "name", "goal", "reason", "dealership_name", "status",
             "script_prompt", "first_message", "extraction_schema",
             "voice_id", "language",
             "concurrency", "retry_delay_minutes", "max_attempts", "retry_on",
@@ -84,7 +84,7 @@ class CampaignCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = [
-            "name", "goal", "reason",
+            "name", "goal", "reason", "dealership_name",
             "script_prompt", "first_message", "extraction_schema",
             "voice_id", "language",
             "concurrency", "retry_delay_minutes", "max_attempts", "retry_on",

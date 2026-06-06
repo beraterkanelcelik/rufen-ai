@@ -122,6 +122,7 @@ export default function Wizard() {
         name: draft.name,
         goal: draft.goal,
         reason: draft.reason,
+        dealership_name: draft.dealershipLocation,
         script_prompt: draft.script_prompt,
         first_message: draft.first_message,
         extraction_schema: draft.extraction_schema,
