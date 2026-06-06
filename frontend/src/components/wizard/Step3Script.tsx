@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateScript } from "../../api";
 import type { ExtractionField } from "../../types";
 import { Button } from "../ui/Button";
@@ -16,6 +16,17 @@ const FIELD_TYPES: ExtractionField["type"][] = [
 export function Step3Script({ draft, update }: StepProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoTried = useRef(false);
+
+  // Auto-draft the moment the user lands on this step (the wizard forces a
+  // generated script before advancing anyway) so there's no empty/glitchy gap.
+  useEffect(() => {
+    if (!autoTried.current && !draft.generated && !busy && draft.goal && draft.reason) {
+      autoTried.current = true;
+      generate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Real AI generation via the backend orchestration LLM (Claude/GPT).
   async function generate() {

@@ -19,6 +19,17 @@ BASE = "https://api.elevenlabs.io/v1"
 DEFAULT_VOICE = "CwhRBWXzGAHq8TQ4Fs17"  # "Roger" — exists in this workspace
 ALLOWED_TYPES = {"string", "boolean", "integer", "number"}
 
+# Appended to every agent's system prompt. References {{today}} / {{current_time}},
+# which the call activity ALWAYS supplies as dynamic variables (so there's never a
+# missing-variable handshake failure), giving the model an accurate "now".
+DATE_ANCHOR = (
+    "\n\nToday's date is {{today}} and the current local time is {{current_time}} "
+    "(timezone Europe/Berlin). Treat this as 'now': whenever the customer mentions a "
+    "relative day such as 'tomorrow', 'Monday', or 'next week', convert it to a "
+    "concrete calendar date in YYYY-MM-DD format before you confirm it and when you "
+    "record the appointment."
+)
+
 
 def _h():
     return {"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "Content-Type": "application/json"}
@@ -112,7 +123,7 @@ async def create_agent(name, system_prompt, first_message, voice_id, language, d
                 "first_message": first_message,
                 "language": language,
                 "prompt": {
-                    "prompt": system_prompt,
+                    "prompt": (system_prompt or "") + DATE_ANCHOR,
                     "llm": os.environ.get("ELEVEN_LLM", "claude-haiku-4-5"),
                 },
             },

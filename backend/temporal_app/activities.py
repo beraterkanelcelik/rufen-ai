@@ -17,6 +17,9 @@ Gotchas honoured:
 import asyncio
 import json
 import os
+import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from asgiref.sync import sync_to_async
 from redis.asyncio import Redis
@@ -25,9 +28,52 @@ from temporalio import activity
 from campaigns.eleven import get_conversation, start_call
 from campaigns.outcomes import classify_outcome
 
+_VAR_RE = re.compile(r"\{\{\s*(\w+)\s*\}\}")
+_LOCAL_TZ = ZoneInfo(os.environ.get("CALL_TZ", "Europe/Berlin"))
+
+
+def _build_dynamic_vars(contact: dict, campaign: dict) -> dict:
+    """ElevenLabs fails a call instantly if the script references a dynamic
+    variable we don't supply (e.g. an LLM-invented {{CALL_TIME}}). So we always
+    provide name/context/phone, then scan the agent's first_message + prompt and
+    fill EVERY other placeholder: time/date-ish ones get the current local value,
+    anything else gets an empty string so the call still connects."""
+    now = datetime.now(_LOCAL_TZ)
+    dyn = {
+        "name": contact["name"],
+        "context": contact["context"] or "",
+        "phone": contact["phone"],
+        # always present so the prompt's date anchor ({{today}}/{{current_time}})
+        # resolves and the agent has an accurate "now" for relative dates.
+        "today": now.strftime("%A, %d %B %Y"),
+        "current_time": now.strftime("%H:%M"),
+        "current_date": now.strftime("%Y-%m-%d"),
+    }
+    text = f"{campaign.get('first_message', '')} {campaign.get('script_prompt', '')}"
+    for var in set(_VAR_RE.findall(text)):
+        if var in dyn:
+            continue
+        low = var.lower()
+        if "time" in low:
+            dyn[var] = now.strftime("%H:%M")
+        elif "date" in low or "day" in low:
+            dyn[var] = now.strftime("%A %d %B %Y")
+        else:
+            dyn[var] = ""
+    return dyn
+
 # Stop polling a single call after this many seconds (voicemail / hung call guard).
-MAX_CALL_SECONDS = 180
+# Real outbound conversations can run several minutes, and ElevenLabs sometimes
+# only surfaces the full transcript once the call is `done` — so this must be
+# comfortably longer than a normal call or we'd cut off mid-conversation and
+# misclassify a great call as no_answer. Env-overridable.
+MAX_CALL_SECONDS = int(os.environ.get("MAX_CALL_SECONDS", "600"))
 POLL_INTERVAL_SECONDS = 1
+# If the call produces NO transcript turns within this window it was never
+# answered (still ringing / declined / dead air) — an answered call speaks its
+# first message within seconds. Stop and classify no_answer instead of waiting
+# out MAX_CALL_SECONDS, which is what left declined calls "stuck calling".
+RING_NO_ANSWER_SECONDS = int(os.environ.get("RING_NO_ANSWER_SECONDS", "40"))
 
 
 def _channel(campaign_id) -> str:
@@ -57,7 +103,9 @@ def _load_contact_and_campaign(contact_id, campaign_id):
     return (
         {"name": contact.name, "phone": contact.phone, "context": contact.context,
          "last_outcome": contact.last_outcome or None},
-        {"eleven_agent_id": campaign.eleven_agent_id},
+        {"eleven_agent_id": campaign.eleven_agent_id,
+         "first_message": campaign.first_message or "",
+         "script_prompt": campaign.script_prompt or ""},
     )
 
 
@@ -119,12 +167,10 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
         })
 
         # bind the contact's own data so the agent already knows it (it's calling
-        # them — it must never ask the customer to read out their own number).
-        dyn = {
-            "name": contact["name"],
-            "context": contact["context"] or "",
-            "phone": contact["phone"],
-        }
+        # them — it must never ask the customer to read out their own number) and
+        # backfill any other placeholder the script references so ElevenLabs
+        # doesn't reject the call for a missing dynamic variable.
+        dyn = _build_dynamic_vars(contact, campaign)
         res = await start_call(use_agent, contact["phone"], dyn)
         conversation_id = res["conversation_id"]
 
@@ -153,8 +199,29 @@ async def place_call_activity(contact_id: int, campaign_id: int, attempt_no: int
             seen = len(transcript)
             if status in ("done", "failed"):
                 break
+            # never engaged → treat as no-answer/declined and stop ringing-wait
+            if elapsed >= RING_NO_ANSWER_SECONDS and not transcript:
+                break
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
             elapsed += POLL_INTERVAL_SECONDS
+
+        # If we stopped without a terminal status (poll-window timeout), fetch once
+        # more: ElevenLabs often only fills the full transcript + analysis when the
+        # call is done, so a single final read rescues an otherwise-"empty" call.
+        if status not in ("done", "failed"):
+            try:
+                data = await get_conversation(conversation_id)
+                status = data.get("status") or status
+                transcript = data.get("transcript") or transcript
+                for turn in transcript[seen:]:
+                    role = "callee" if turn.get("role") == "user" else "agent"
+                    await _publish(redis, campaign_id, {
+                        "type": "transcript", "contactId": cid_str,
+                        "role": role, "text": turn.get("message") or "",
+                    })
+                seen = len(transcript)
+            except Exception:
+                pass
 
         outcome = classify_outcome(status, transcript)
         result = _extract_results(data)

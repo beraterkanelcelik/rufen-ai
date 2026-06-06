@@ -53,7 +53,9 @@ class ContactCallWorkflow:
                 res = await workflow.execute_activity(
                     place_call_activity,
                     args=[contact_id, campaign_id, attempt, agent_id],
-                    start_to_close_timeout=timedelta(minutes=5),
+                    # must exceed MAX_CALL_SECONDS (600s) so Temporal never kills a
+                    # genuinely long call while it's still polling the transcript.
+                    start_to_close_timeout=timedelta(minutes=11),
                     # NO Temporal auto-retry: re-running this activity would place a
                     # SECOND real call. A failed dial is caught below and handled by
                     # the outcome-level retry (a fresh, delayed attempt) instead.
