@@ -58,6 +58,26 @@ async def start_call(agent_id, to_number, dynamic_variables):
         return r.json()
 
 
+def list_voices():
+    """Sync: list the workspace's ElevenLabs voices for the wizard picker.
+    Returns [{id, name, accent, desc, preview_url}]."""
+    with httpx.Client(timeout=30) as c:
+        r = c.get(f"{BASE}/voices", headers=_h())
+        r.raise_for_status()
+        voices = r.json().get("voices", [])
+    out = []
+    for v in voices:
+        labels = v.get("labels") or {}
+        out.append({
+            "id": v.get("voice_id"),
+            "name": v.get("name"),
+            "accent": labels.get("accent", ""),
+            "desc": labels.get("description") or v.get("category") or "",
+            "preview_url": v.get("preview_url"),
+        })
+    return out
+
+
 async def get_conversation(cid):
     """Fetch a conversation (status, transcript, analysis.data_collection_results)."""
     async with httpx.AsyncClient(timeout=30) as c:
